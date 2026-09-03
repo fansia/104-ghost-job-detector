@@ -93,6 +93,14 @@
   th { color: var(--muted); font-weight: 500; }
 
   .note { color: var(--muted); font-size: 14px; }
+  figure.shot { margin: 0 0 22px; }
+  figure.shot img {
+    display: block; width: 100%; height: auto;
+    border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow);
+  }
+  figure.shot figcaption {
+    color: var(--muted); font-size: 14px; line-height: 1.7; margin-top: 12px;
+  }
   footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border);
     color: var(--muted); font-size: 14px; }
 </style>
@@ -115,12 +123,14 @@
 </p>
 <p>這個外掛把另一半補上。每張職缺卡片會多出一列徽章:</p>
 
-<div class="demo">[留意 32]  從未回覆應徵者 ・ 11 天沒處理履歷 ・ 4 人應徵          ▾</div>
-
-<p class="note">
-  點開徽章會展開完整原始數據:HR 活躍度百分位、上次處理履歷、上次回覆應徵者、
-  真實刊登日期、精確應徵人數、公司同時開缺數、觀察到的重新刊登次數。
-</p>
+<figure class="shot">
+  <img src="screenshot.png" alt="104 職缺頁上的偵測徽章,展開後顯示 HR 活躍度、上次處理履歷、上次回覆應徵者、刊登天數、應徵人數等原始數據" />
+  <figcaption>
+    點開徽章會展開完整原始數據。注意右下角 104 自己只顯示「6~10 人應徵」,
+    徽章給的是精確的 <strong>8 人</strong>;而「從未回覆過任何應徵者」這件事,
+    104 從頭到尾不會告訴你。
+  </figcaption>
+</figure>
 
 <h2>安裝</h2>
 
@@ -188,6 +198,9 @@
 <h2>已知限制</h2>
 <ul class="note">
   <li>104 沒有公開「首次刊登日期」,<code>appearDate</code> 只是最後更新日。真正的刊登時長要靠外掛長期累積觀察紀錄。</li>
+  <li>應徵人數只有搜尋 API 有,公司職缺 API 與職缺詳細頁 API 都沒有。搜尋 API 又不支援以公司過濾,
+    只能用公司名稱當關鍵字再比對公司代碼 —— 公司名稱夠特殊時能完整對上,名稱通用時只撈得到一部分,
+    對不到的職缺就不顯示應徵人數。</li>
   <li>依賴 104 未公開文件的 API,對方改版可能失效。</li>
   <li><code>hrBehaviorPR</code> 的確切計算方式是 104 的內部邏輯,我們只知道它是活躍度百分位。</li>
 </ul>

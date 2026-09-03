@@ -12,7 +12,7 @@
     maxPage: 0,
     exhausted: false,
     companyCache: new Map(), // "custCode:page" -> Promise<companyJobs()>
-
+    applyCache: new Map(), // custCode -> Promise<{ jobCode: 應徵人數 }>
   };
 
   /* ---------- 觀察紀錄:記下第一次看到的時間與重新刊登次數 ---------- */
@@ -46,6 +46,16 @@
     return p;
   }
 
+  // 公司頁上十幾張卡片會同時要應徵人數,共用同一個 Promise 才不會重複打 API
+  function getApplyCounts(custName, custCode) {
+    if (!custName || !custCode) return Promise.resolve(null);
+    let p = state.applyCache.get(custCode);
+    if (p) return p;
+    p = api.applyCountsByCompany(custName, custCode).catch(() => null);
+    state.applyCache.set(custCode, p);
+    return p;
+  }
+
   /** 大公司職缺會超過一頁,往後翻到找到這個職缺為止 */
   async function findCompanyEntry(custCode, jobCode) {
     if (!custCode) return { entry: null, totalCount: null };
@@ -66,16 +76,22 @@
   async function analyse(searchRow, jobDetail) {
     const jobCode = (searchRow && searchRow.jobCode) || null;
     const custCode = (searchRow && searchRow.custCode) || (jobDetail && jobDetail.custCode);
+    const custName = (searchRow && searchRow.custName) || (jobDetail && jobDetail.custName);
 
-    const [company, history] = await Promise.all([
+    // 公司頁與職缺詳細頁的來源都沒有應徵人數,要另外用公司名稱查搜尋 API 補
+    const needApplyCnt = !searchRow || typeof searchRow.applyCnt !== 'number';
+
+    const [company, history, applyCounts] = await Promise.all([
       findCompanyEntry(custCode, jobCode),
       touchHistory(jobCode, searchRow && searchRow.appearDate),
+      needApplyCnt ? getApplyCounts(custName, custCode) : null,
     ]);
 
     const facts = score.buildFacts({
       searchRow,
       companyEntry: company.entry,
       companyTotal: company.totalCount,
+      applyCnt: applyCounts && jobCode ? applyCounts[jobCode] : undefined,
       history,
       jobDetail,
     });
@@ -181,7 +197,7 @@
     return a ? u.jobCodeFromUrl(a.getAttribute('href') || a.href) : null;
   }
 
-  async function decorateCompanyCard(card, custCode) {
+  async function decorateCompanyCard(card, custCode, custName) {
     const jobCode = companyCardJobCode(card);
     if (!jobCode) return;
     if (card.dataset.gjdFor === jobCode) return;
@@ -196,8 +212,8 @@
     anchor.after(loading);
 
     try {
-      // 公司頁的職缺資料本身就來自公司 API,不需要搜尋 API
-      const { facts, result } = await analyse({ jobCode, custCode }, null);
+      // 職缺本身的資料來自公司 API;應徵人數只有搜尋 API 有,靠 custName 去補
+      const { facts, result } = await analyse({ jobCode, custCode, custName }, null);
       if (card.dataset.gjdFor !== jobCode || !loading.isConnected) {
         loading.remove();
         return;
@@ -212,8 +228,10 @@
     if (!state.enabled) return;
     const custCode = u.custCodeFromUrl(location.pathname);
     if (!custCode) return;
+    const h1 = document.querySelector('h1');
+    const custName = h1 ? h1.textContent.trim() : null;
     document.querySelectorAll('.job-list-container--cprofile').forEach((card) => {
-      decorateCompanyCard(card, custCode);
+      decorateCompanyCard(card, custCode, custName);
     });
   }
 
@@ -233,7 +251,7 @@
     const detail = await api.jobContent(jobCode);
     if (!detail) return;
 
-    // 詳細頁 API 沒有 applyCnt,其餘訊號都拿得到
+    // 詳細頁 API 沒有 applyCnt,analyse() 會用 custName 另外去搜尋 API 補
     const pseudoRow = {
       jobCode,
       jobName: detail.jobName,

@@ -123,7 +123,7 @@ var GJD = (function (ns) {
   }
 
   /** 把各來源的原始資料整理成 scoreJob 需要的事實集合 */
-  function buildFacts({ searchRow, companyEntry, companyTotal, history, jobDetail }) {
+  function buildFacts({ searchRow, companyEntry, companyTotal, applyCnt, history, jobDetail }) {
     const src = searchRow || {};
     const ce = companyEntry || {};
     const ir = ce.interactionRecord || null;
@@ -150,7 +150,12 @@ var GJD = (function (ns) {
       daysSinceReply: ir ? u.daysSinceTs(ir.lastCustReplyTimestamp, now) : null,
       postedDays: u.daysSince(appearDate),
       appearDateText: appearRaw,
-      applyCnt: typeof src.applyCnt === 'number' ? src.applyCnt : null,
+      applyCnt:
+        typeof src.applyCnt === 'number'
+          ? src.applyCnt
+          : typeof applyCnt === 'number'
+            ? applyCnt
+            : null,
       openJobs: typeof companyTotal === 'number' ? companyTotal : null,
       repostCount: history ? history.repostCount || 0 : 0,
       firstSeen: history ? history.firstSeen : null,
