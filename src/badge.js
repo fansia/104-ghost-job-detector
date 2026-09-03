@@ -5,7 +5,8 @@ var GJD = (function (ns) {
   /** 摘要列上最值得一眼看到的兩三個事實 */
   function headlineFacts(f) {
     const out = [];
-    if (f.hasInteraction) {
+    // 沒人應徵時講「從未回覆應徵者」會誤導 —— 跟 score.js 用同一個條件
+    if (f.hasInteraction && f.applyCnt !== 0) {
       if (f.daysSinceReply === null) out.push('從未回覆應徵者');
       else if (f.daysSinceReply > 30) out.push(`上次回覆 ${f.daysSinceReply} 天前`);
 
@@ -25,13 +26,26 @@ var GJD = (function (ns) {
     const push = (label, value) => rows.push({ label, value });
 
     push('HR 活躍度', typeof f.hrBehaviorPR === 'number' ? `PR ${Math.round(f.hrBehaviorPR * 100)}(104 內部指標)` : '無資料');
+    const noApplicants = f.applyCnt === 0;
     push(
       '上次處理履歷',
-      !f.hasInteraction ? '無資料' : f.daysSinceProcessed === null ? '沒有紀錄' : `${f.daysSinceProcessed} 天前`
+      !f.hasInteraction
+        ? '無資料'
+        : f.daysSinceProcessed !== null
+          ? `${f.daysSinceProcessed} 天前`
+          : noApplicants
+            ? '尚無人應徵'
+            : '沒有紀錄'
     );
     push(
       '上次回覆應徵者',
-      !f.hasInteraction ? '無資料' : f.daysSinceReply === null ? '從未回覆過' : `${f.daysSinceReply} 天前`
+      !f.hasInteraction
+        ? '無資料'
+        : f.daysSinceReply !== null
+          ? `${f.daysSinceReply} 天前`
+          : noApplicants
+            ? '尚無人應徵'
+            : '從未回覆過'
     );
     push('刊登(更新)日期', f.appearDateText ? `${f.appearDateText}(${f.postedDays} 天前)` : '無資料');
     if (typeof f.applyCnt === 'number') push('應徵人數', `${f.applyCnt} 人`);

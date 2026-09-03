@@ -23,6 +23,12 @@ var GJD = (function (ns) {
     let score = 0;
     const reasons = [];
 
+    // 沒人應徵,就沒有履歷可處理、也沒有人可以回覆 —— 這時 interactionRecord 是空的
+    // 是數學上的必然,不是「已讀不回」的證據,拿來扣分等於處罰一個還沒被看見的缺。
+    // (實測同一家公司的 19 個缺有 17 個不同的處理時間,確認這是職缺層級的資料;
+    //  唯一 0 人應徵的那個缺,兩個欄位正好都是 null。)
+    const noApplicants = f.applyCnt === 0;
+
     function add(points, text, kind) {
       score += points;
       reasons.push({ points, text, kind: kind || 'warn' });
@@ -44,7 +50,20 @@ var GJD = (function (ns) {
     }
 
     // 2. 上次處理履歷的時間 —— 最能反映「這個缺還有沒有人在看」
-    if (f.hasInteraction) {
+    if (f.hasInteraction && noApplicants) {
+      if (f.daysSinceProcessed !== null) {
+        reasons.push({
+          points: 0,
+          text: `${f.daysSinceProcessed} 天前處理過履歷`,
+          kind: 'good',
+        });
+      }
+      reasons.push({
+        points: 0,
+        text: '尚無人應徵,無從判斷 HR 的處理與回覆行為',
+        kind: 'info',
+      });
+    } else if (f.hasInteraction) {
       const d = f.daysSinceProcessed;
       if (d === null) {
         add(25, '沒有任何處理履歷的紀錄');

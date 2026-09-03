@@ -135,6 +135,15 @@
 <h2>安裝</h2>
 
 <div class="card">
+  <h3 style="margin-top:0">方式一:Chrome 線上應用程式商店</h3>
+  <p class="note" style="margin-bottom:0">
+    送審中,通過後這裡會放上一鍵安裝的連結,並且能自動更新。
+    在那之前請用下面的方式二。
+  </p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">方式二:手動安裝(現在就能用)</h3>
   <ol class="steps">
     <li>
       到 <a href="https://github.com/fansia/104-ghost-job-detector/releases/latest">最新版本頁面</a>
@@ -149,7 +158,7 @@
     </li>
   </ol>
   <p class="note" style="margin-top:16px">
-    本外掛沒有上架 Chrome 線上應用程式商店,所以不會自動更新;有新版時請回到
+    手動安裝不會自動更新;有新版時請回到
     <a href="https://github.com/fansia/104-ghost-job-detector/releases">Releases</a>
     重新下載,並在 <code>chrome://extensions/</code> 點該外掛的「重新載入」。
     另外 Chrome 每次啟動可能會提醒你「停用開發人員模式的擴充功能」—— 點「保留」即可。
@@ -177,6 +186,11 @@
 </table>
 </div>
 <p class="note" style="margin-top:14px">
+  <strong>0 人應徵的職缺不套用互動訊號。</strong>
+  沒人投,就沒有履歷可處理、也沒有人可以回覆,紀錄是空的是必然,不是「已讀不回」的證據 ——
+  這時「沒處理履歷」和「從未回覆」都不扣分,改顯示中性提示。刊登時長等其他訊號照算。
+</p>
+<p class="note" style="margin-top:14px">
   <strong>分數只是排序用的摘要。</strong>
   把真職缺誤標成假的,對求職者和公司都是傷害,所以 UI 一律同時呈現原始數據,
   讓你自己判斷,而不是給一個武斷的結論。權重定義在
@@ -189,7 +203,7 @@
   <p style="margin:0 0 10px"><strong>不蒐集、不上傳任何資料。</strong>開發者沒有伺服器。</p>
   <p class="note" style="margin:0">
     所有請求都由你的瀏覽器以同源請求直接送到 <code>www.104.com.tw</code>,不經過任何第三方。
-    <code>chrome.storage.local</code> 只存 API 快取(6 小時)與職缺觀察紀錄,全部留在你的電腦上,
+    <code>chrome.storage.local</code> 只存 API 快取(最長 6 小時)與職缺觀察紀錄,全部留在你的電腦上,
     可從彈出視窗一鍵清除。完整說明見
     <a href="https://github.com/fansia/104-ghost-job-detector/blob/main/PRIVACY.md">隱私權政策</a>。
   </p>

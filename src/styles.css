@@ -87,6 +87,7 @@
 
 .gjd-reason { color: var(--gjd-accent); }
 .gjd-reason--good { color: #2f7d43; }
+.gjd-reason--info { color: #6b7280; }
 
 .gjd-detail__note {
   margin: 0;
