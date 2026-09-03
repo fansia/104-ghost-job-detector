@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        width: 300px;
+        margin: 0;
+        padding: 14px;
+        font: 13px/1.6 system-ui, -apple-system, "Noto Sans TC", sans-serif;
+        color: #222;
+      }
+      h1 { margin: 0 0 4px; font-size: 15px; }
+      p.sub { margin: 0 0 12px; color: #777; font-size: 12px; }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-top: 1px solid #eee;
+      }
+      .legend { margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
+      .legend div { display: flex; gap: 6px; align-items: center; margin-bottom: 3px; }
+      .dot { width: 10px; height: 10px; border-radius: 999px; flex: none; }
+      .g { background: #2f7d43; } .y { background: #8a6b12; }
+      .o { background: #a85b16; } .r { background: #b32626; }
+      button {
+        font: inherit;
+        padding: 4px 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background: #fff;
+        cursor: pointer;
+      }
+      .note { margin-top: 10px; color: #999; font-size: 11px; }
+    </style>
+  </head>
+  <body>
+    <h1>幽靈職缺偵測器</h1>
+    <p class="sub">顯示 104 沒告訴你的:HR 到底有沒有在看履歷。</p>
+    <p class="sub" style="margin-top:-8px">本外掛由第三方獨立開發,非 104 人力銀行官方產品。</p>
+
+    <div class="row">
+      <label for="enabled">啟用偵測</label>
+      <input type="checkbox" id="enabled" checked />
+    </div>
+    <div class="row">
+      <span>已觀察職缺</span>
+      <span id="tracked">—</span>
+    </div>
+    <div class="row">
+      <span>清除快取與紀錄</span>
+      <button id="clear">清除</button>
+    </div>
+
+    <div class="legend">
+      <div><span class="dot g"></span>0–19 正常</div>
+      <div><span class="dot y"></span>20–39 留意</div>
+      <div><span class="dot o"></span>40–64 可疑</div>
+      <div><span class="dot r"></span>65+ 高風險</div>
+    </div>
+
+    <p class="note">
+      分數僅供參考,請以徽章展開後的原始數據為準。資料全部來自 104 公開 API,不會傳送到任何第三方。
+    </p>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

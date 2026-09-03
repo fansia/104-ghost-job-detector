@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "幽靈職缺偵測器(104 非官方)",
+  "short_name": "幽靈職缺偵測器",
+  "version": "1.0.0",
+  "description": "在 104 人力銀行的職缺上顯示 HR 實際處理履歷的紀錄,幫你避開已讀不回的幽靈職缺。非 104 官方推出。",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.104.com.tw/*"],
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "幽靈職缺偵測器(104 非官方)",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.104.com.tw/jobs/search*",
+        "https://www.104.com.tw/job/*",
+        "https://www.104.com.tw/company/*"
+      ],
+      "js": [
+        "src/util.js",
+        "src/api.js",
+        "src/score.js",
+        "src/badge.js",
+        "src/content.js"
+      ],
+      "css": ["src/styles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

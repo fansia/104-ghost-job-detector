@@ -1,0 +1,101 @@
+/* 徽章樣式。全部前綴 gjd- 避免污染 104 自己的樣式。 */
+
+.gjd-badge {
+  margin: 6px 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--gjd-line, #e2e5e9);
+  background: var(--gjd-bg, #f7f8f9);
+  font-size: 13px;
+  line-height: 1.5;
+  color: #333;
+  overflow: hidden;
+}
+
+.gjd-badge--green  { --gjd-line: #cfe6d4; --gjd-bg: #f2f9f4; --gjd-accent: #2f7d43; }
+.gjd-badge--yellow { --gjd-line: #f0e2bd; --gjd-bg: #fdf8ec; --gjd-accent: #8a6b12; }
+.gjd-badge--orange { --gjd-line: #f5d7bd; --gjd-bg: #fdf3ea; --gjd-accent: #a85b16; }
+.gjd-badge--red    { --gjd-line: #f2c9c9; --gjd-bg: #fdf1f1; --gjd-accent: #b32626; }
+
+.gjd-badge--loading {
+  padding: 6px 10px;
+  color: #888;
+  font-size: 12px;
+}
+
+.gjd-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  background: none;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.gjd-bar:hover { background: rgba(0, 0, 0, 0.03); }
+
+.gjd-pill {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--gjd-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.gjd-facts {
+  flex: 1;
+  min-width: 0;
+  color: #4a4a4a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gjd-caret {
+  flex: none;
+  color: #999;
+  font-size: 11px;
+}
+
+.gjd-detail {
+  padding: 8px 10px 10px;
+  border-top: 1px dashed var(--gjd-line);
+}
+
+.gjd-detail__grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 12px;
+  margin-bottom: 8px;
+}
+
+.gjd-detail__k { color: #888; }
+.gjd-detail__v { color: #222; }
+
+.gjd-detail__reasons {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.gjd-reason { color: var(--gjd-accent); }
+.gjd-reason--good { color: #2f7d43; }
+
+.gjd-detail__note {
+  margin: 0;
+  color: #999;
+  font-size: 11px;
+}
+
+/* 職缺詳細頁的徽章給多一點空間 */
+.gjd-badge--page {
+  margin-top: 10px;
+  max-width: 720px;
+}

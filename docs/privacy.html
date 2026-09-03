@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>隱私權政策 — 幽靈職缺偵測器(104 非官方)</title>
+<meta name="description" content="本外掛不蒐集、不上傳任何資料。所有資料留在你自己的裝置上。" />
+<style>
+  :root {
+    --bg: #fbfaf8;
+    --panel: #ffffff;
+    --border: #e6e2db;
+    --ink: #1f2933;
+    --muted: #6b7280;
+    --accent: #e2583c;
+    --code-bg: #f4f2ee;
+    --shadow: 0 1px 2px rgba(31,41,51,.06), 0 8px 24px rgba(31,41,51,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181d;
+      --panel: #1b2027;
+      --border: #2c333c;
+      --ink: #e8eaed;
+      --muted: #9aa4b2;
+      --accent: #ff7458;
+      --code-bg: #232a32;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.75 system-ui, -apple-system, "Noto Sans TC", "PingFang TC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px 96px; }
+
+  header { padding: 72px 0 40px; }
+  .mark { width: 68px; height: 68px; border-radius: 16px; display: block; box-shadow: var(--shadow); }
+  h1 { font-size: 30px; line-height: 1.3; margin: 22px 0 8px; letter-spacing: -.01em; }
+  .tagline { font-size: 18px; color: var(--muted); margin: 0 0 18px; }
+  .unofficial {
+    display: inline-block; font-size: 13px; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 999px; padding: 3px 11px;
+  }
+
+  h2 { font-size: 20px; margin: 48px 0 12px; letter-spacing: -.01em; }
+  h3 { font-size: 15px; margin: 26px 0 8px; }
+  p { margin: 0 0 14px; }
+  a { color: var(--accent); }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 22px; box-shadow: var(--shadow);
+  }
+  .card + .card { margin-top: 14px; }
+
+  .demo {
+    font: 13px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; overflow-x: auto; white-space: pre;
+    margin: 0 0 18px;
+  }
+  code { font: .9em ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+
+  ol.steps { padding-left: 0; list-style: none; counter-reset: s; margin: 0; }
+  ol.steps li {
+    counter-increment: s; position: relative;
+    padding: 0 0 16px 40px; border-left: 2px solid var(--border); margin-left: 13px;
+  }
+  ol.steps li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  ol.steps li::before {
+    content: counter(s); position: absolute; left: -14px; top: 0;
+    width: 26px; height: 26px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+    font-size: 13px; display: grid; place-items: center;
+  }
+
+  .btn {
+    display: inline-block; background: var(--accent); color: #fff;
+    text-decoration: none; padding: 9px 18px; border-radius: 8px;
+    font-size: 15px; font-weight: 500;
+  }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+
+  .tbl-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; }
+
+  .note { color: var(--muted); font-size: 14px; }
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border);
+    color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header style="padding:56px 0 24px">
+  <p style="margin:0 0 12px"><a href="./">← 回到說明頁</a></p>
+  <h1 style="font-size:26px">隱私權政策</h1>
+  <p class="note" style="margin:0">最後更新:2026-09-03</p>
+</header>
+
+<p>
+  「幽靈職缺偵測器(104 非官方)」(以下簡稱「本外掛」)是由第三方獨立開發的 Chrome 擴充功能,
+  與 104 資訊科技股份有限公司無任何隸屬或合作關係。
+</p>
+
+<h2>我們不蒐集任何資料</h2>
+<div class="card">
+  <p style="margin:0 0 10px">
+    本外掛<strong>不會蒐集、儲存或傳輸任何個人資料</strong>到開發者或任何第三方伺服器。
+    開發者沒有任何伺服器,也沒有任何管道取得你的使用紀錄。
+  </p>
+  <p class="note" style="margin:0">具體而言,本外掛不蒐集:個人身分識別資訊(姓名、電子郵件、地址、年齡、
+    身分證字號等)、健康資訊、財務與付款資訊、帳號認證資訊(帳號、密碼、Cookie、Token)、
+    個人通訊內容、地理位置、網頁瀏覽紀錄,以及使用者活動追蹤(點擊、滑鼠移動、按鍵)。</p>
+</div>
+
+<h2>資料如何流動</h2>
+<p>
+  本外掛在你的瀏覽器中,以你自己的身分向 104 人力銀行的公開 API 發出請求,
+  取得職缺的公開統計欄位(HR 處理履歷時間、回覆應徵者時間、應徵人數等),並將結果顯示在 104 的頁面上。
+</p>
+<p>
+  這些請求是<strong>同源請求</strong>,直接由你的瀏覽器送到 <code>www.104.com.tw</code>,
+  不經過任何中介伺服器。開發者看不到這些請求,也看不到回應內容。
+</p>
+
+<h2>本機儲存</h2>
+<p>本外掛使用 <code>chrome.storage.local</code> 在<strong>你自己的電腦上</strong>儲存兩類資料:</p>
+<div class="tbl-wrap">
+<table>
+  <tr><th>資料</th><th>用途</th><th>保存期間</th></tr>
+  <tr><td>API 回應快取</td><td>避免重複請求同一個職缺,減少對 104 的負擔</td><td>6 小時後失效</td></tr>
+  <tr><td>職缺觀察紀錄</td><td>記錄某個職缺被重新刊登過幾次</td><td>直到你手動清除</td></tr>
+</table>
+</div>
+<p class="note" style="margin-top:14px">
+  這些資料<strong>永遠不會離開你的裝置</strong>。你可以隨時從擴充功能的彈出視窗點「清除」一次刪除全部。
+  移除本外掛時,Chrome 也會一併刪除。
+</p>
+
+<h2>權限說明</h2>
+<div class="tbl-wrap">
+<table>
+  <tr><th>權限</th><th>為什麼需要</th></tr>
+  <tr><td><code>storage</code></td><td>在本機存放上述快取與觀察紀錄</td></tr>
+  <tr><td><code>https://www.104.com.tw/*</code></td><td>在 104 的職缺頁面上注入徽章,並向 104 的公開 API 查詢職缺資料</td></tr>
+</table>
+</div>
+<p class="note" style="margin-top:14px">本外掛不要求任何其他權限,也不會在 104 以外的任何網站上執行。</p>
+
+<h2>程式碼公開</h2>
+<p>
+  本外掛完整原始碼以 MIT 授權公開,任何人都可以檢視、稽核與自行建置。上架版本與原始碼一致:
+  <a href="https://github.com/fansia/104-ghost-job-detector">github.com/fansia/104-ghost-job-detector</a>
+</p>
+
+<h2>變更與聯絡</h2>
+<p>
+  本政策若有變更,會更新本頁面並修改上方的「最後更新」日期。
+  對隱私權有任何疑問,請至
+  <a href="https://github.com/fansia/104-ghost-job-detector/issues">GitHub Issues</a> 提出。
+</p>
+
+<footer>
+  MIT 授權開源 ・ 與 104 資訊科技股份有限公司無隸屬關係
+</footer>
+
+</div>
+</body>
+</html>

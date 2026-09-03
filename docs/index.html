@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>幽靈職缺偵測器(104 非官方)</title>
+<meta name="description" content="在 104 人力銀行的職缺上,直接顯示 HR 到底有沒有在處理履歷。開源、不蒐集任何資料。" />
+<style>
+  :root {
+    --bg: #fbfaf8;
+    --panel: #ffffff;
+    --border: #e6e2db;
+    --ink: #1f2933;
+    --muted: #6b7280;
+    --accent: #e2583c;
+    --code-bg: #f4f2ee;
+    --shadow: 0 1px 2px rgba(31,41,51,.06), 0 8px 24px rgba(31,41,51,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181d;
+      --panel: #1b2027;
+      --border: #2c333c;
+      --ink: #e8eaed;
+      --muted: #9aa4b2;
+      --accent: #ff7458;
+      --code-bg: #232a32;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.75 system-ui, -apple-system, "Noto Sans TC", "PingFang TC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px 96px; }
+
+  header { padding: 72px 0 40px; }
+  .mark { width: 68px; height: 68px; border-radius: 16px; display: block; box-shadow: var(--shadow); }
+  h1 { font-size: 30px; line-height: 1.3; margin: 22px 0 8px; letter-spacing: -.01em; }
+  .tagline { font-size: 18px; color: var(--muted); margin: 0 0 18px; }
+  .unofficial {
+    display: inline-block; font-size: 13px; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 999px; padding: 3px 11px;
+  }
+
+  h2 { font-size: 20px; margin: 48px 0 12px; letter-spacing: -.01em; }
+  h3 { font-size: 15px; margin: 26px 0 8px; }
+  p { margin: 0 0 14px; }
+  a { color: var(--accent); }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 22px; box-shadow: var(--shadow);
+  }
+  .card + .card { margin-top: 14px; }
+
+  .demo {
+    font: 13px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; overflow-x: auto; white-space: pre;
+    margin: 0 0 18px;
+  }
+  code { font: .9em ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+
+  ol.steps { padding-left: 0; list-style: none; counter-reset: s; margin: 0; }
+  ol.steps li {
+    counter-increment: s; position: relative;
+    padding: 0 0 16px 40px; border-left: 2px solid var(--border); margin-left: 13px;
+  }
+  ol.steps li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  ol.steps li::before {
+    content: counter(s); position: absolute; left: -14px; top: 0;
+    width: 26px; height: 26px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+    font-size: 13px; display: grid; place-items: center;
+  }
+
+  .btn {
+    display: inline-block; background: var(--accent); color: #fff;
+    text-decoration: none; padding: 9px 18px; border-radius: 8px;
+    font-size: 15px; font-weight: 500;
+  }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+
+  .tbl-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; }
+
+  .note { color: var(--muted); font-size: 14px; }
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border);
+    color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <img class="mark" src="icon256.png" alt="" />
+  <h1>幽靈職缺偵測器</h1>
+  <p class="tagline">在 104 人力銀行的職缺上,直接顯示 HR 到底有沒有在處理履歷。</p>
+  <span class="unofficial">第三方獨立開發,非 104 人力銀行官方產品</span>
+</header>
+
+<h2>它解決什麼問題</h2>
+<p>
+  104 的資料庫其實記錄了每個職缺「上次處理履歷」和「上次回覆應徵者」的時間,
+  透過公開 API 就查得到。但 104 只會在頁面上顯示正面的那一半
+  (例如「7 天內處理過履歷」),從不告訴你這家公司<strong>從來沒有回覆過任何應徵者</strong>。
+</p>
+<p>這個外掛把另一半補上。每張職缺卡片會多出一列徽章:</p>
+
+<div class="demo">[留意 32]  從未回覆應徵者 ・ 11 天沒處理履歷 ・ 4 人應徵          ▾</div>
+
+<p class="note">
+  點開徽章會展開完整原始數據:HR 活躍度百分位、上次處理履歷、上次回覆應徵者、
+  真實刊登日期、精確應徵人數、公司同時開缺數、觀察到的重新刊登次數。
+</p>
+
+<h2>安裝</h2>
+
+<div class="card">
+  <ol class="steps">
+    <li>
+      到 <a href="https://github.com/fansia/104-ghost-job-detector/releases/latest">最新版本頁面</a>
+      下載 <code>ghost-job-detector-x.y.z.zip</code>,解壓縮到一個你不會刪掉的資料夾。
+    </li>
+    <li>打開 Chrome,在網址列輸入 <code>chrome://extensions/</code> 後按 Enter。</li>
+    <li>把右上角的<strong>「開發人員模式」</strong>打開。</li>
+    <li>點左上角<strong>「載入未封裝項目」</strong>,選擇剛才解壓縮出來的資料夾。</li>
+    <li>
+      到 <a href="https://www.104.com.tw/jobs/search/">104 找工作</a> 搜尋任何職缺,
+      徽章就會出現在每張卡片上。
+    </li>
+  </ol>
+  <p class="note" style="margin-top:16px">
+    本外掛沒有上架 Chrome 線上應用程式商店,所以不會自動更新;有新版時請回到
+    <a href="https://github.com/fansia/104-ghost-job-detector/releases">Releases</a>
+    重新下載,並在 <code>chrome://extensions/</code> 點該外掛的「重新載入」。
+    另外 Chrome 每次啟動可能會提醒你「停用開發人員模式的擴充功能」—— 點「保留」即可。
+  </p>
+</div>
+
+<h2>評分怎麼算</h2>
+<p>
+  分數 0–100,由多個訊號加總而成,分級為
+  <code>0–19 正常</code> / <code>20–39 留意</code> /
+  <code>40–64 可疑</code> / <code>65+ 高風險</code>。
+</p>
+<div class="tbl-wrap">
+<table>
+  <tr><th>訊號</th><th>分數</th></tr>
+  <tr><td>HR 活躍度 PR &lt; 30 / &lt; 50</td><td>+30 / +15</td></tr>
+  <tr><td>超過 14 天 / 7 天沒處理履歷</td><td>+25 / +12</td></tr>
+  <tr><td>從未回覆過應徵者</td><td>+20</td></tr>
+  <tr><td>上次回覆超過 90 天 / 30 天</td><td>+12 / +6</td></tr>
+  <tr><td>刊登超過 90 / 60 / 30 天</td><td>+18 / +12 / +6</td></tr>
+  <tr><td>50 人以上應徵但一週沒處理</td><td>+10</td></tr>
+  <tr><td>公司同時開 30 / 15 個缺以上</td><td>+10 / +5</td></tr>
+  <tr><td>觀察期間重新刊登 2 次以上</td><td>+15</td></tr>
+  <tr><td>待遇面議</td><td>+4</td></tr>
+</table>
+</div>
+<p class="note" style="margin-top:14px">
+  <strong>分數只是排序用的摘要。</strong>
+  把真職缺誤標成假的,對求職者和公司都是傷害,所以 UI 一律同時呈現原始數據,
+  讓你自己判斷,而不是給一個武斷的結論。權重定義在
+  <a href="https://github.com/fansia/104-ghost-job-detector/blob/main/src/score.js">src/score.js</a>,
+  歡迎依實際情況調整。
+</p>
+
+<h2>隱私</h2>
+<div class="card">
+  <p style="margin:0 0 10px"><strong>不蒐集、不上傳任何資料。</strong>開發者沒有伺服器。</p>
+  <p class="note" style="margin:0">
+    所有請求都由你的瀏覽器以同源請求直接送到 <code>www.104.com.tw</code>,不經過任何第三方。
+    <code>chrome.storage.local</code> 只存 API 快取(6 小時)與職缺觀察紀錄,全部留在你的電腦上,
+    可從彈出視窗一鍵清除。完整說明見
+    <a href="https://github.com/fansia/104-ghost-job-detector/blob/main/PRIVACY.md">隱私權政策</a>。
+  </p>
+</div>
+
+<h2>已知限制</h2>
+<ul class="note">
+  <li>104 沒有公開「首次刊登日期」,<code>appearDate</code> 只是最後更新日。真正的刊登時長要靠外掛長期累積觀察紀錄。</li>
+  <li>依賴 104 未公開文件的 API,對方改版可能失效。</li>
+  <li><code>hrBehaviorPR</code> 的確切計算方式是 104 的內部邏輯,我們只知道它是活躍度百分位。</li>
+</ul>
+
+<p style="margin-top:32px">
+  <a class="btn" href="https://github.com/fansia/104-ghost-job-detector/releases/latest">下載最新版本</a>
+  <a class="btn ghost" href="https://github.com/fansia/104-ghost-job-detector">在 GitHub 上檢視原始碼</a>
+</p>
+
+<footer>
+  MIT 授權開源 ・ 與 104 資訊科技股份有限公司無隸屬關係 ・
+  「104」為其權利人之商標,此處僅為說明本外掛適用範圍。
+</footer>
+
+</div>
+</body>
+</html>

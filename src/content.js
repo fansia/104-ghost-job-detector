@@ -1,0 +1,308 @@
+/* 主流程:偵測頁面類型 → 取資料 → 算分 → 注入徽章。 */
+(function () {
+  const { util: u, api, score, badge } = GJD;
+
+  const MAX_PAGES = 30; // 搜尋結果的保險上限,避免無止境往後翻頁
+  const MAX_COMPANY_PAGES = 6; // 一頁 100 筆,足以涵蓋開缺最多的公司
+
+  const state = {
+    enabled: true,
+    rowsByJobNo: new Map(), // 搜尋 API 的結果,key 是數字 jobNo
+    pageFetches: new Map(), // page -> Promise,避免同一頁被併發重複請求
+    maxPage: 0,
+    exhausted: false,
+    companyCache: new Map(), // "custCode:page" -> Promise<companyJobs()>
+
+  };
+
+  /* ---------- 觀察紀錄:記下第一次看到的時間與重新刊登次數 ---------- */
+
+  async function touchHistory(jobCode, appearDate) {
+    if (!jobCode) return null;
+    const key = 'hist:' + jobCode;
+    let h = await u.cacheGet(key);
+    const today = new Date().toISOString().slice(0, 10);
+    if (!h) {
+      h = { firstSeen: today, lastAppear: appearDate || null, repostCount: 0 };
+    } else if (appearDate && h.lastAppear && appearDate !== h.lastAppear) {
+      h.repostCount = (h.repostCount || 0) + 1;
+      h.lastAppear = appearDate;
+    } else if (appearDate && !h.lastAppear) {
+      h.lastAppear = appearDate;
+    }
+    await u.cacheSet(key, h);
+    return h;
+  }
+
+  /* ---------- 資料組裝 ---------- */
+
+  // 同一間公司的同一頁只請求一次,多張卡片共用結果
+  function getCompanyPage(custCode, page) {
+    const key = custCode + ':' + page;
+    let p = state.companyCache.get(key);
+    if (p) return p;
+    p = api.companyJobs(custCode, page).catch(() => null);
+    state.companyCache.set(key, p);
+    return p;
+  }
+
+  /** 大公司職缺會超過一頁,往後翻到找到這個職缺為止 */
+  async function findCompanyEntry(custCode, jobCode) {
+    if (!custCode) return { entry: null, totalCount: null };
+    let totalPages = 1;
+    let totalCount = null;
+    for (let page = 1; page <= totalPages && page <= MAX_COMPANY_PAGES; page++) {
+      const res = await getCompanyPage(custCode, page);
+      if (!res) break;
+      totalCount = res.totalCount;
+      totalPages = res.totalPages || 1;
+      if (jobCode && res.byJobCode[jobCode]) {
+        return { entry: res.byJobCode[jobCode], totalCount };
+      }
+    }
+    return { entry: null, totalCount };
+  }
+
+  async function analyse(searchRow, jobDetail) {
+    const jobCode = (searchRow && searchRow.jobCode) || null;
+    const custCode = (searchRow && searchRow.custCode) || (jobDetail && jobDetail.custCode);
+
+    const [company, history] = await Promise.all([
+      findCompanyEntry(custCode, jobCode),
+      touchHistory(jobCode, searchRow && searchRow.appearDate),
+    ]);
+
+    const facts = score.buildFacts({
+      searchRow,
+      companyEntry: company.entry,
+      companyTotal: company.totalCount,
+      history,
+      jobDetail,
+    });
+    return { facts, result: score.scoreJob(facts) };
+  }
+
+  /* ---------- 搜尋結果頁 ---------- */
+
+  function searchParams() {
+    // 沿用使用者當前的搜尋條件,只換 page/pagesize
+    const p = new URLSearchParams(location.search);
+    p.delete('page');
+    p.delete('pagesize');
+    return p;
+  }
+
+  // 多張卡片會同時要求同一頁,必須共用同一個 Promise 並等它完成,
+  // 否則後到的呼叫會在資料還沒回來時就以為已經取過了。
+  function ensurePage(page) {
+    let p = state.pageFetches.get(page);
+    if (p) return p;
+    p = api
+      .searchJobs(searchParams(), page)
+      .then((rows) => {
+        for (const r of rows) state.rowsByJobNo.set(r.jobNo, r);
+        if (rows.length === 0) state.exhausted = true;
+        state.maxPage = Math.max(state.maxPage, page);
+      })
+      .catch(() => {
+        state.pageFetches.delete(page); // 失敗後允許重試
+      });
+    state.pageFetches.set(page, p);
+    return p;
+  }
+
+  // 一頁 API 實際回傳的筆數不固定(含置頂職缺時會多於 pagesize),
+  // 所以不能用卡片索引推算頁碼,改成從第一頁循序往後找。
+  async function findRow(jobNo) {
+    let row = state.rowsByJobNo.get(jobNo);
+    if (row) return row;
+    for (let page = 1; page <= state.maxPage + 1 && page <= MAX_PAGES; page++) {
+      await ensurePage(page);
+      row = state.rowsByJobNo.get(jobNo);
+      if (row) return row;
+      if (state.exhausted) break;
+    }
+    return null;
+  }
+
+  async function decorateCard(card) {
+    const jobNo = card.getAttribute('data-job-no');
+    if (!jobNo) return;
+
+    // 卡片被虛擬捲動回收重用時,dataset 會換成別的職缺,要重畫
+    if (card.dataset.gjdFor === jobNo) return;
+    card.dataset.gjdFor = jobNo;
+    const old = card.querySelector(':scope > .gjd-badge');
+    if (old) old.remove();
+
+    const anchor = card.querySelector('.info-job') || card.querySelector('h2');
+    if (!anchor) return;
+
+    const loading = badge.renderLoading();
+    anchor.after(loading);
+
+    const row = await findRow(jobNo);
+
+    // 卡片可能在等待期間已被回收
+    if (card.dataset.gjdFor !== jobNo || !loading.isConnected) {
+      loading.remove();
+      return;
+    }
+    if (!row) {
+      loading.remove();
+      return;
+    }
+
+    try {
+      const { facts, result } = await analyse(row, null);
+      if (card.dataset.gjdFor !== jobNo || !loading.isConnected) {
+        loading.remove();
+        return;
+      }
+      loading.replaceWith(badge.render(facts, result));
+    } catch (e) {
+      loading.remove();
+    }
+  }
+
+  function scanSearchPage() {
+    if (!state.enabled) return;
+    document.querySelectorAll('.job-summary[data-job-no]').forEach((card) => {
+      decorateCard(card);
+    });
+  }
+
+  /* ---------- 公司頁的「工作機會」列表 ---------- */
+
+  // 公司頁沒有 data-job-no,改用職缺連結裡的 base36 代碼當識別;
+  // 公司職缺 API 本來就以這個代碼為 key,反而更直接。
+  function companyCardJobCode(card) {
+    const a = card.querySelector('a[href*="/job/"]');
+    return a ? u.jobCodeFromUrl(a.getAttribute('href') || a.href) : null;
+  }
+
+  async function decorateCompanyCard(card, custCode) {
+    const jobCode = companyCardJobCode(card);
+    if (!jobCode) return;
+    if (card.dataset.gjdFor === jobCode) return;
+    card.dataset.gjdFor = jobCode;
+    const old = card.querySelector(':scope .gjd-badge');
+    if (old) old.remove();
+
+    const anchor = card.querySelector('.info-job') || card.querySelector('h2');
+    if (!anchor) return;
+
+    const loading = badge.renderLoading();
+    anchor.after(loading);
+
+    try {
+      // 公司頁的職缺資料本身就來自公司 API,不需要搜尋 API
+      const { facts, result } = await analyse({ jobCode, custCode }, null);
+      if (card.dataset.gjdFor !== jobCode || !loading.isConnected) {
+        loading.remove();
+        return;
+      }
+      loading.replaceWith(badge.render(facts, result));
+    } catch (e) {
+      loading.remove();
+    }
+  }
+
+  function scanCompanyPage() {
+    if (!state.enabled) return;
+    const custCode = u.custCodeFromUrl(location.pathname);
+    if (!custCode) return;
+    document.querySelectorAll('.job-list-container--cprofile').forEach((card) => {
+      decorateCompanyCard(card, custCode);
+    });
+  }
+
+  /* ---------- 職缺詳細頁 ---------- */
+
+  async function decorateJobPage() {
+    if (!state.enabled) return;
+    const jobCode = u.jobCodeFromUrl(location.pathname);
+    if (!jobCode) return;
+
+    const header = document.querySelector('.job-header__title') || document.querySelector('.job-header');
+    if (!header || header.dataset.gjdFor === jobCode) return;
+    header.dataset.gjdFor = jobCode;
+    const old = document.querySelector('.gjd-badge--page');
+    if (old) old.remove();
+
+    const detail = await api.jobContent(jobCode);
+    if (!detail) return;
+
+    // 詳細頁 API 沒有 applyCnt,其餘訊號都拿得到
+    const pseudoRow = {
+      jobCode,
+      jobName: detail.jobName,
+      custName: detail.custName,
+      custCode: detail.custCode,
+      appearDate: detail.appearDate,
+      hrBehaviorPR: detail.hrBehaviorPR,
+    };
+    const { facts, result } = await analyse(pseudoRow, detail);
+    const el = badge.render(facts, result);
+    el.classList.add('gjd-badge--page');
+    header.append(el);
+  }
+
+  /* ---------- 啟動 ---------- */
+
+  function route() {
+    if (location.pathname.startsWith('/jobs/search')) {
+      scanSearchPage();
+    } else if (/^\/job\/[0-9a-z]+/i.test(location.pathname)) {
+      decorateJobPage();
+    } else if (/^\/company\/[0-9a-z]+/i.test(location.pathname)) {
+      scanCompanyPage();
+    }
+  }
+
+  let scheduled = false;
+  function schedule() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      scheduled = false;
+      route();
+    });
+  }
+
+  async function init() {
+    const box = await chrome.storage.local.get('gjd:enabled');
+    state.enabled = box['gjd:enabled'] !== false;
+    if (!state.enabled) return;
+
+    route();
+
+    // 虛擬捲動會不斷替換卡片內容,靠 MutationObserver 補上徽章
+    const mo = new MutationObserver(schedule);
+    mo.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-job-no'],
+    });
+
+    // 104 是 SPA,換頁不會重新載入。
+    // 只看 pathname + query:公司頁切換頁籤只改 hash,不需要整批重畫。
+    const routeKey = () => location.pathname + location.search;
+    let lastUrl = routeKey();
+    setInterval(() => {
+      if (routeKey() !== lastUrl) {
+        lastUrl = routeKey();
+        state.rowsByJobNo.clear();
+        state.pageFetches.clear();
+        state.maxPage = 0;
+        state.exhausted = false;
+        document.querySelectorAll('[data-gjd-for]').forEach((e) => delete e.dataset.gjdFor);
+        document.querySelectorAll('.gjd-badge').forEach((e) => e.remove());
+        schedule();
+      }
+    }, 800);
+  }
+
+  init();
+})();
