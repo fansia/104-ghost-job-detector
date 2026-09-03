@@ -148,11 +148,14 @@ https://fansia.github.io/104-ghost-job-detector/privacy.html
 | 商店圖示 | 128×128 PNG | ✅ `icons/icon128.png` |
 | 商店列表大圖 | 256×256 PNG | ✅ `store/icon256.png` |
 | 螢幕截圖 | 1280×800 或 640×400,1–5 張 | ⚠️ `store/screenshot-1280x800.png` 可先送,建議再補 2 張 |
-| 小型宣傳圖塊 | 440×280 PNG(選填,但會影響曝光) | ⬜ |
+| 小型宣傳圖塊 | 440×280 PNG(選填,但會影響曝光) | ✅ `store/promo-440x280.png` |
+| 跑馬燈宣傳圖塊 | 1400×560 PNG(選填) | ✅ `store/promo-1400x560.png` |
 | 開發者帳號 | 一次性 $5 USD 註冊費 | ⬜ |
 
 `store/screenshot-1280x800.png` 已把實際運作畫面(原始 1099×359)排版成合規的
 1280×800,單張即可送審。但一張截圖的說服力有限,建議再補兩張。
+
+所有圖片都存成 24 位元 RGB PNG(無 alpha 透明層),符合商店規定。
 
 截圖建議拍三張:
 
