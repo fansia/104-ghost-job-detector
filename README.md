@@ -30,6 +30,14 @@
 > 手動安裝不會自動更新。有新版時回到 Releases 重新下載,
 > 並在 `chrome://extensions/` 點該外掛的「重新載入」。
 
+### 上架時通知我
+
+Chrome 商店審核通過時會寄一封信,就這一封。之後只有重大更新才會再寄,隨時可退訂。
+
+👉 [留下 email](https://ericyensc.substack.com/s/ghost-job-detector)
+
+訂閱由 Substack 處理,email 不會進到外掛裡。**外掛本身依然不蒐集任何資料**,這兩件事是分開的。
+
 ### 支援環境
 
 | 環境 | 支援 | 說明 |
