@@ -103,6 +103,14 @@
   }
   footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border);
     color: var(--muted); font-size: 14px; }
+
+  /* 停用公告固定為淺底深字:它是全頁最重要的訊息,不隨主題浮動。
+     底色寫死就必須連文字色一起寫死,只固定一半會在深色主題下變成看不見。 */
+  .gjd-notice, .gjd-notice p, .gjd-notice li { color: #4c1d1d; }
+  .gjd-notice h2 { color: #991b1b; }
+  .gjd-notice strong { color: #7f1d1d; }
+  .gjd-notice .note { color: #78504f; }
+  .gjd-notice a { color: #991b1b; }
 </style>
 </head>
 <body>
@@ -111,28 +119,42 @@
 <header>
   <img class="mark" src="icon256.png" alt="" />
   <h1>幽靈職缺偵測器</h1>
-  <p class="tagline">在 104 人力銀行的職缺上,直接顯示 HR 到底有沒有在處理履歷。</p>
+  <p class="tagline">在 104 人力銀行的職缺上,直接顯示 HR 到底有沒有在處理履歷。<br /><strong>已停止建議使用(2026-09-04)</strong></p>
   <span class="unofficial">第三方獨立開發,非 104 人力銀行官方產品</span>
 </header>
 
 
-<div class="card" style="border-left:4px solid #c2410c;background:#fff7ed;margin-bottom:22px">
-  <h3 style="margin-top:0">2026-09-04:104 改了資料格式</h3>
-  <p style="margin:0 0 10px">
-    104 把 <code>interactionRecord</code> 的時間戳、應徵人數與 HR 活躍度全部歸零,
-    互動紀錄改用預先算好的中文字串提供。v1.6.0 起已全數對應:
+<div class="card gjd-notice" style="border-left:5px solid #991b1b;background:#fef2f2;color:#4c1d1d;margin-bottom:26px">
+  <h2 style="margin:0 0 12px;font-size:22px;color:#991b1b">這個外掛已經沒有存在的必要,請不要再安裝</h2>
+
+  <p style="margin:0 0 12px">
+    <strong>2026-09-04,104 調整了資料格式。</strong>原本能取得的三項資訊 ——
+    HR 上次處理履歷的精確時間、應徵人數的精確數字、HR 活躍度百分位 —— 都不再提供。
   </p>
-  <ul style="margin:0 0 10px;padding-left:20px">
-    <li>✅ <strong>處理履歷與回覆的時間</strong>照常顯示(改讀新的字串格式)</li>
-    <li>✅ <strong>應徵人數</strong>改為級距(0~5 / 6~10 / 11~30 / 30 人以上),
-        與 104 自己頁面上顯示的實測 66 筆完全一致。精確人數拿不到了,級距還在</li>
-    <li>✅ <strong>「✦ 機會」徽章</strong>照常運作(門檻改用最低級距)</li>
-    <li>❌ <strong>HR 活躍度</strong>沒有替代來源,不再顯示也不再計分</li>
-    <li>⚠️ 回覆的時間窗從 90 天縮成 <strong>30 天</strong></li>
+
+  <p style="margin:0 0 12px">
+    這個外掛的用途,是把 104 資料庫裡有、但頁面上不顯示的那一半補出來。
+    改版之後,我們能拿到的幾乎就是 104 已經寫在頁面上的東西:
+    同樣的「N 天內處理過履歷」、同樣的應徵人數級距。
+    <strong>沒有額外資訊,就沒有安裝它的理由。</strong>
+  </p>
+
+  <p style="margin:0 0 12px">
+    差異還剩什麼,也講清楚:104 只在「有紀錄」時顯示那一行,沒有紀錄時整行不顯示,
+    本外掛仍會標出「30 天內無處理紀錄」。但只為了這一點而多裝一個擴充功能,不划算。
+  </p>
+
+  <ul style="margin:0 0 12px;padding-left:20px">
+    <li><strong>還沒安裝的:</strong>不用裝了。</li>
+    <li><strong>已經安裝的:</strong>留著或移除都可以。它不會造成任何危害,只是幫助有限。</li>
+    <li><strong>原始碼仍以 MIT 授權公開</strong>,任何人都可以接手、參考或改作。</li>
   </ul>
+
   <p class="note" style="margin:0">
-    進度見 <a href="https://github.com/fansia/104-ghost-job-detector/issues/14">issue #14</a>。
-    下面的截圖拍攝於改版前,「應徵人數」該列現在會顯示級距,「HR 活躍度」會顯示「無資料」。
+    謝謝這幾天回報問題的每一位。特別是指出「無紀錄不等於從未回覆」的那位,
+    以及這次回報「明明面試過的公司卻被標成無紀錄」的那位 ——
+    兩次都是在阻止這個工具冤枉真實的公司。
+    以下內容原樣保留,作為這個專案做過什麼的紀錄。
   </p>
 </div>
 
