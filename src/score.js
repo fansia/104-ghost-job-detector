@@ -10,7 +10,8 @@ var GJD = (function (ns) {
   /* 應徵人數區間。
    * 104 於 2026-09 把 applyCnt 歸零,但 analysisType 這個欄位仍帶著人數級距,
    * 而且與 104 自己頁面上顯示的「N~M 人應徵」實測 66 筆完全一致(1:1,零衝突)。
-   * 精確人數拿不到了,級距還在。 */
+   * 精確人數後來從應徵分析端點救回來了(見 api.applyCount),級距退居備援:
+   * 端點失敗、或精確值與級距對不上時仍然顯示級距。 */
   const APPLY_RANGE = { 1: '0~5 人', 2: '6~10 人', 3: '11~30 人', 4: '30 人以上' };
   const applyRangeText = (t) => APPLY_RANGE[t] || null;
 
@@ -26,7 +27,8 @@ var GJD = (function (ns) {
    * 而且 104 只看得到站內訊息 —— HR 直接打電話或寄 email 不會被記錄。
    *   hasInteraction      是否有拿到 interactionRecord
    *   postedDays     刊登(最後更新)距今天數
-   *   applyCnt       應徵人數(104 於 2026-09 移除,現多為 null)
+   *   hrActive       104 的「積極徵才中」標準(等價 PR >= 0.7);false 不代表不活躍
+   *   applyCnt       精確應徵人數(來自應徵分析端點),取不到時為 null
    *   applyType      應徵人數級距 1~4
    *   applyRangeText 級距的文字,例如「6~10 人」
    *   openJobs       公司目前總開缺數
@@ -64,6 +66,11 @@ var GJD = (function (ns) {
           kind: 'good',
         });
       }
+    } else if (f.hrActive === true) {
+      // 拿不到 PR 數值時的替代路徑,見 buildFacts 的說明。
+      // 只給正向訊號:hrActive 為 false 只代表 PR 沒到 0.7,無法區分「0.65」和「墊底」,
+      // 拿它扣分會冤枉一大票中段班的職缺。
+      reasons.push({ points: 0, text: 'HR 活躍度達 104 的「積極徵才中」標準', kind: 'good' });
     }
 
     // 2. 上次處理履歷的時間 —— 最能反映「這個缺還有沒有人在看」
@@ -118,8 +125,14 @@ var GJD = (function (ns) {
     }
 
     // 5. 收了一堆履歷卻沒在處理
-    if (f.applyType === 4 && f.daysSinceProcessed !== null && f.daysSinceProcessed > 7) {
-      add(10, '已有 30 人以上應徵,但 HR 超過一週沒處理');
+    const manyApplicants = f.applyType === 4 || (typeof f.applyCnt === 'number' && f.applyCnt > 30);
+    if (manyApplicants && f.daysSinceProcessed !== null && f.daysSinceProcessed > 7) {
+      add(
+        10,
+        typeof f.applyCnt === 'number'
+          ? `已有 ${f.applyCnt} 人應徵,但 HR 超過一週沒處理`
+          : '已有 30 人以上應徵,但 HR 超過一週沒處理'
+      );
     }
 
     // 6. 公司同時開的缺數(養人才庫的常見特徵)
@@ -166,9 +179,9 @@ var GJD = (function (ns) {
    * 這時候搶先投才有意義。實測交集約佔 30%。
    */
 
-  // 104 改版後拿不到精確人數,只剩級距。原本的門檻是「3 人以下」,
-  // 現在能取得的最低級距是「0~5 人」,所以條件實質上放寬了一點 ——
-  // 但「新刊登」與「HR 近期在看履歷」兩個條件沒動,三者的交集仍然夠窄。
+  // 精確人數改由應徵分析端點取得,門檻回到原本的「3 人以下」;
+  // 只拿得到級距時退回「0~5 人」這一檔,條件會鬆一點但仍是最低檔。
+  const OPP_MAX_APPLY = 3;
   const OPP_APPLY_TYPE = 1;
   const OPP_MAX_POSTED_DAYS = 7;
   const OPP_MAX_PROCESSED_DAYS = 7;
@@ -178,14 +191,16 @@ var GJD = (function (ns) {
   function detectOpportunity(f, score) {
     // 只在幾乎沒有風險訊號時才敢講「機會」,否則等於自打嘴巴
     if (score > OPP_MAX_SCORE) return null;
-    if (f.applyType !== OPP_APPLY_TYPE) return null;
+    if (typeof f.applyCnt === 'number') {
+      if (f.applyCnt > OPP_MAX_APPLY) return null;
+    } else if (f.applyType !== OPP_APPLY_TYPE) return null;
     if (typeof f.postedDays !== 'number' || f.postedDays > OPP_MAX_POSTED_DAYS) return null;
     if (f.daysSinceProcessed === null || f.daysSinceProcessed > OPP_MAX_PROCESSED_DAYS) {
       return null;
     }
     return {
       reasons: [
-        `應徵人數 ${f.applyRangeText}`,
+        typeof f.applyCnt === 'number' ? `${f.applyCnt} 人應徵` : `應徵人數 ${f.applyRangeText}`,
         `${u.daysAgoText(f.postedDays)}刊登`,
         `HR ${u.withinDaysText(f.daysSinceProcessed)}處理過履歷`,
       ],
@@ -231,6 +246,24 @@ var GJD = (function (ns) {
     // 誤判的代價卻是全部,所以 0 一律視為無資料。
     const hrPR = hrPRRaw === 0 ? null : hrPRRaw;
 
+    /* hasHrBehavior:PR 歸零後唯一還活著的活躍度訊號。
+     *
+     * 104 前端判斷要不要掛「積極徵才中」的條件是 hasHrBehavior || hrBehaviorPR >= 0.7,
+     * 也就是說這個布林值等價於「PR >= 0.7」。實測 50 筆與 PR 的一致率 96%,
+     * 兩筆不一致的 PR 是 0.737 與 0.753,都緊貼門檻 —— 那是快照時間差,不是規則不同。
+     *
+     * 它只有單向意義:true 代表活躍度前 30%,false 只代表沒到 0.7,
+     * 中段班和墊底混在一起,分不出來,所以 false 不能拿來扣分。
+     */
+    const hrActive =
+      typeof src.hasHrBehavior === 'boolean'
+        ? src.hasHrBehavior
+        : typeof ce.hasHrBehavior === 'boolean'
+          ? ce.hasHrBehavior
+          : jobDetail && typeof jobDetail.hasHrBehavior === 'boolean'
+            ? jobDetail.hasHrBehavior
+            : null;
+
     // 應徵人數級距:搜尋列 / 公司職缺 API / 職缺內頁都有
     const analysisType =
       typeof src.analysisType === 'number'
@@ -241,10 +274,25 @@ var GJD = (function (ns) {
             ? jobDetail.analysisType
             : null;
 
+    /* 應徵分析端點對「不存在的 job_no」「參數是 0 或非數字」全都回 200 + total 0,
+     * 跟真的 0 人應徵長得一模一樣。所以拿 analysisType 交叉驗證:級距說有 6 人以上,
+     * 精確值卻是 0,代表這次沒對上,寧可退回級距也不要報一個假的 0。 */
+    const rawApply = typeof applyCnt === 'number' ? applyCnt : null;
+    const applyTrusted =
+      rawApply !== null && !(rawApply === 0 && typeof analysisType === 'number' && analysisType >= 2);
+    const exactApply = applyTrusted
+      ? rawApply
+      : descApi
+        ? null
+        : typeof src.applyCnt === 'number'
+          ? src.applyCnt
+          : null;
+
     return {
       jobName: src.jobName || ce.jobName || (jobDetail && jobDetail.jobName),
       custName: src.custName || (jobDetail && jobDetail.custName),
       hrBehaviorPR: hrPR,
+      hrActive,
       hasInteraction: !!ir,
       daysSinceProcessed: !ir
         ? null
@@ -258,16 +306,10 @@ var GJD = (function (ns) {
           : u.daysSinceTs(ir.lastCustReplyTimestamp, now),
       postedDays: u.daysSince(appearDate),
       appearDateText: u.formatDate(appearDate) || appearRaw || null,
-      // 新格式下 applyCnt 恆為 0(實測 792/792),而 104 頁面上同一個職缺仍顯示
-      // 「6~10 人應徵」—— 那是「不再提供」,不是「沒有人應徵」。
-      // 照著顯示「0 人」會是不實陳述,所以一律當成取不到,改用 analysisType 的級距。
-      applyCnt: descApi
-        ? null
-        : typeof src.applyCnt === 'number'
-          ? src.applyCnt
-          : typeof applyCnt === 'number'
-            ? applyCnt
-            : null,
+      // 搜尋 API 自己的 applyCnt 在新格式下恆為 0(實測 792/792),那是「不再提供」
+      // 而不是「沒有人應徵」,不能照著顯示。精確人數改由應徵分析端點取得,
+      // 只有舊格式才回頭信任 src.applyCnt。
+      applyCnt: exactApply,
       applyType: analysisType,
       applyRangeText: applyRangeText(analysisType),
       openJobs: typeof companyTotal === 'number' ? companyTotal : null,

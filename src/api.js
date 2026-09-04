@@ -9,7 +9,7 @@ var GJD = (function (ns) {
   const queue = u.makeQueue(2, 250); // 同時最多 2 個請求,每個間隔 250ms
   const COMPANY_TTL = 6 * 60 * 60 * 1000; // 公司資料快取 6 小時
   const SEARCH_TTL = 5 * 60 * 1000;
-  const APPLY_TTL = 60 * 60 * 1000; // 應徵人數快取 1 小時
+  const APPLY_TTL = 6 * 60 * 60 * 1000; // 應徵人數每日更新一次,快取 6 小時就夠
 
   async function getJson(url) {
     try {
@@ -25,7 +25,8 @@ var GJD = (function (ns) {
   }
 
   /**
-   * 搜尋 API — 一次拿 20 筆職缺的 appearDate / applyCnt / hrBehaviorPR。
+   * 搜尋 API — 一次拿 20 筆職缺的 appearDate / analysisType / hasHrBehavior。
+   * applyCnt 與 hrBehaviorPR 兩個欄位仍在回傳裡,但 104 已把值歸零,只留著以防它改回來。
    * @param {URLSearchParams} params 直接沿用使用者當前搜尋頁的查詢條件
    */
   async function searchJobs(params, page) {
@@ -48,7 +49,7 @@ var GJD = (function (ns) {
       appearDate: x.appearDate,
       applyCnt: x.applyCnt,
       hrBehaviorPR: x.hrBehaviorPR,
-      // 104 改版後 applyCnt 恆為 0,應徵人數改由 analysisType 提供區間(1~4)
+      // 104 改版後 applyCnt 恆為 0:級距看 analysisType,精確人數見 applyCount()
       analysisType: x.analysisType,
       hasHrBehavior: x.hasHrBehavior,
       interactionRecord: x.interactionRecord || null,
@@ -113,58 +114,48 @@ var GJD = (function (ns) {
     return out;
   }
 
-  const APPLY_MAX_PAGES = 3;
-  // 搜尋結果太發散,代表公司名稱被斷詞成通用詞(「第一金人壽保險股份有限公司」
-  // 會命中兩萬多筆),再翻幾頁也撈不到這家的缺,不如省下請求。
-  const APPLY_MAX_TOTAL = 400;
-
-  /**
-   * 用公司名稱查搜尋 API,補回應徵人數。
+  /* 應徵人數。
    *
-   * 公司職缺 API 和職缺詳細頁 API 都沒有應徵人數(它們的 userApplyCount 是
-   * 「你自己投過幾次」,不是應徵者總數),精確的 applyCnt 只有搜尋 API 有。
-   * 而搜尋 API 沒有任何以公司過濾的參數(cust/custNo/kwop 全試過,都被忽略),
-   * 只能拿公司名稱當關鍵字撈,再自行比對 custCode 濾掉名稱相近的其他公司。
+   * 104 於 2026-09 把搜尋 API 的 applyCnt 歸零,但應徵分析頁自己用的端點仍然給精確
+   * 人數。job_no 是職缺代碼的 base36 數值(例:8y318 -> 15027164,與搜尋 API 回傳的
+   * 數字 jobNo 一致)。不需要登入。
    *
-   * 因此這是盡力而為:公司名稱夠特殊時能完整對上,名稱通用時只會拿到一部分,
-   * 對不到的職缺就不顯示應徵人數(badge 本來就會略過 null 欄位)。
-   *
-   * @returns {Promise<Object<string, number>>} jobCode(base36) -> 應徵人數
+   * 回傳的八個維度各自帶 total,但 skill/cert 只統計「有填這欄」的應徵者,會比實際
+   * 人數少,所以只取人口統計維度。
    */
-  async function applyCountsByCompany(custName, custCode) {
-    if (!custName || !custCode) return {};
-    const key = 'apply:' + custCode;
+  const APPLY_TOTAL_KEYS = ['sex', 'edu', 'yearRange', 'exp'];
+
+  async function applyCount(jobCode) {
+    if (!jobCode) return null;
+    const jobNo = parseInt(String(jobCode), 36);
+    if (!Number.isFinite(jobNo) || jobNo <= 0) return null;
+
+    const key = 'apply:' + jobCode;
     const cached = await u.cacheGet(key, APPLY_TTL);
-    if (cached) return cached;
+    if (cached) return typeof cached.count === 'number' ? cached.count : null;
 
-    const out = {};
+    let json;
     try {
-      for (let page = 1; page <= APPLY_MAX_PAGES; page++) {
-        const p = new URLSearchParams({
-          keyword: custName,
-          page: String(page),
-          pagesize: '20',
-        });
-        const json = await queue(() =>
-          getJson('https://www.104.com.tw/jobs/search/api/jobs?' + p.toString())
-        );
-        const rows = json.data || [];
-        for (const x of rows) {
-          if (u.custCodeFromUrl(x.link && x.link.cust) !== custCode) continue;
-          const code = u.jobCodeFromUrl(x.link && x.link.job);
-          if (code && typeof x.applyCnt === 'number') out[code] = x.applyCnt;
-        }
-        const total =
-          json.metadata && json.metadata.pagination && json.metadata.pagination.total;
-        if (!rows.length) break;
-        if (typeof total === 'number' && (page * 20 >= total || total > APPLY_MAX_TOTAL)) break;
-      }
+      json = await queue(() =>
+        getJson('https://www.104.com.tw/jb/104i/applyAnalysisToJob/all?job_no=' + jobNo)
+      );
     } catch (e) {
-      return out; // 撈到一半失敗就用已有的,應徵人數不是關鍵訊號
+      return null;
     }
+    if (!json || typeof json !== 'object') return null;
 
-    await u.cacheSet(key, out);
-    return out;
+    let count = null;
+    for (const k of APPLY_TOTAL_KEYS) {
+      const t = json[k] && json[k].total;
+      if (typeof t === 'number') {
+        count = t;
+        break;
+      }
+    }
+    if (count === null) return null;
+
+    await u.cacheSet(key, { count });
+    return count;
   }
 
   /** 職缺詳細頁 API */
@@ -199,6 +190,6 @@ var GJD = (function (ns) {
     return out;
   }
 
-  ns.api = { searchJobs, companyJobs, applyCountsByCompany, jobContent };
+  ns.api = { searchJobs, companyJobs, applyCount, jobContent };
   return ns;
 })(typeof GJD === 'undefined' ? {} : GJD);

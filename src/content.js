@@ -12,7 +12,7 @@
     maxPage: 0,
     exhausted: false,
     companyCache: new Map(), // "custCode:page" -> Promise<companyJobs()>
-    applyCache: new Map(), // custCode -> Promise<{ jobCode: 應徵人數 }>
+    applyCache: new Map(), // jobCode -> Promise<應徵人數>
   };
 
   /* ---------- 觀察紀錄:記下第一次看到的時間與重新刊登次數 ---------- */
@@ -47,13 +47,13 @@
     return p;
   }
 
-  // 公司頁上十幾張卡片會同時要應徵人數,共用同一個 Promise 才不會重複打 API
-  function getApplyCounts(custName, custCode) {
-    if (!custName || !custCode) return Promise.resolve(null);
-    let p = state.applyCache.get(custCode);
+  // 同一個職缺可能同時被多張卡片(或重複掃描)要求,共用 Promise 才不會重複打 API
+  function getApplyCount(jobCode) {
+    if (!jobCode) return Promise.resolve(null);
+    let p = state.applyCache.get(jobCode);
     if (p) return p;
-    p = api.applyCountsByCompany(custName, custCode).catch(() => null);
-    state.applyCache.set(custCode, p);
+    p = api.applyCount(jobCode).catch(() => null);
+    state.applyCache.set(jobCode, p);
     return p;
   }
 
@@ -77,22 +77,20 @@
   async function analyse(searchRow, jobDetail) {
     const jobCode = (searchRow && searchRow.jobCode) || null;
     const custCode = (searchRow && searchRow.custCode) || (jobDetail && jobDetail.custCode);
-    const custName = (searchRow && searchRow.custName) || (jobDetail && jobDetail.custName);
 
-    // 公司頁與職缺詳細頁的來源都沒有應徵人數,要另外用公司名稱查搜尋 API 補
-    const needApplyCnt = !searchRow || typeof searchRow.applyCnt !== 'number';
-
-    const [company, history, applyCounts] = await Promise.all([
+    // 搜尋 / 公司職缺 / 職缺內頁三個 API 的 applyCnt 都被 104 歸零了,
+    // 精確人數一律走應徵分析端點,每個職缺各問一次。
+    const [company, history, applyCnt] = await Promise.all([
       findCompanyEntry(custCode, jobCode),
       touchHistory(jobCode, searchRow && searchRow.appearDate),
-      needApplyCnt ? getApplyCounts(custName, custCode) : null,
+      getApplyCount(jobCode),
     ]);
 
     const facts = score.buildFacts({
       searchRow,
       companyEntry: company.entry,
       companyTotal: company.totalCount,
-      applyCnt: applyCounts && jobCode ? applyCounts[jobCode] : undefined,
+      applyCnt,
       history,
       jobDetail,
     });
@@ -213,7 +211,7 @@
     anchor.after(loading);
 
     try {
-      // 職缺本身的資料來自公司 API;應徵人數只有搜尋 API 有,靠 custName 去補
+      // 職缺本身的資料來自公司 API,應徵人數由應徵分析端點補
       const { facts, result } = await analyse({ jobCode, custCode, custName }, null);
       if (card.dataset.gjdFor !== jobCode || !loading.isConnected) {
         loading.remove();
@@ -239,7 +237,7 @@
   /**
    * 只知道 base36 職缺代碼時的分析路徑。
    * 職缺詳細頁 API 沒有 applyCnt,也沒有 interactionRecord 的解析結果 ——
-   * analyse() 會用 custCode 去公司 API 拿互動紀錄,用 custName 去搜尋 API 補應徵人數。
+   * analyse() 會用 custCode 去公司 API 拿互動紀錄,再由應徵分析端點補應徵人數。
    * 職缺內頁與推薦頁共用這條路。
    */
   async function analyseByJobCode(jobCode, detail) {
@@ -250,6 +248,8 @@
       custCode: detail.custCode,
       appearDate: detail.appearDate,
       hrBehaviorPR: detail.hrBehaviorPR,
+      hasHrBehavior: detail.hasHrBehavior,
+      analysisType: detail.analysisType,
     };
     return analyse(pseudoRow, detail);
   }
