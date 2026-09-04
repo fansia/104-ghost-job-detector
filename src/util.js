@@ -164,6 +164,118 @@ var GJD = (function (ns) {
     }
   }
 
+  /* ---------- 使用量統計 ----------
+   * 唯一用途:判斷什麼時候適合開口請使用者去商店留評價。
+   * 只有四個數字(看過幾個缺、展開幾次、哪幾天用過、有沒有回應過邀請),
+   * 不含任何職缺內容,也不含任何可識別身分的資料,而且全部留在這台電腦上。
+   */
+
+  const STATS_KEY = 'gjd:stats';
+
+  // 門檻:要等到「真的用順手」才開口。第一次看到徽章的人還在搞懂這是什麼,
+  // 這時候問等於打斷。四個條件要同時成立。
+  const ASK_MIN_JOBS = 80; // 累計看過的不重複職缺
+  const ASK_MIN_EXPANDS = 5; // 展開徽章的次數 —— 真的在看數據,而不是把徽章當背景
+  const ASK_MIN_DAYS = 3; // 不同的使用日數。一天狂刷 200 個缺不算用順手
+  const ASK_MIN_AGE_DAYS = 3; // 距離第一次執行
+  const ACTIVE_DAYS_CAP = 10; // 只留最近幾天,不需要完整的使用歷史
+
+  let stats = null;
+  let statsDirty = false;
+  let statsTimer = null;
+
+  function todayKey() {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+
+  function blankStats() {
+    return { installedAt: Date.now(), jobs: 0, expands: 0, days: [], review: null };
+  }
+
+  async function loadStats() {
+    if (stats) return stats;
+    try {
+      const box = await chrome.storage.local.get(STATS_KEY);
+      const v = box[STATS_KEY];
+      stats = v && typeof v === 'object' ? Object.assign(blankStats(), v) : blankStats();
+      if (!Array.isArray(stats.days)) stats.days = [];
+    } catch (e) {
+      stats = blankStats();
+    }
+    return stats;
+  }
+
+  // 一頁會渲染二十幾張徽章,每次都寫 storage 太浪費 —— 合併成兩秒一次。
+  function saveStatsSoon() {
+    statsDirty = true;
+    if (statsTimer) return;
+    statsTimer = setTimeout(async () => {
+      statsTimer = null;
+      if (!statsDirty || !stats) return;
+      statsDirty = false;
+      try {
+        await chrome.storage.local.set({ [STATS_KEY]: stats });
+      } catch (e) {
+        /* 統計寫不進去不影響主要功能 */
+      }
+    }, 2000);
+  }
+
+  /** 第一次看到某個職缺時呼叫(由 touchHistory 判斷),所以這是不重複的計數。 */
+  async function noteNewJob() {
+    const s = await loadStats();
+    s.jobs = (s.jobs || 0) + 1;
+    saveStatsSoon();
+  }
+
+  async function noteExpand() {
+    const s = await loadStats();
+    s.expands = (s.expands || 0) + 1;
+    saveStatsSoon();
+  }
+
+  async function noteActiveDay() {
+    const s = await loadStats();
+    const d = todayKey();
+    if (s.days.includes(d)) return;
+    s.days.push(d);
+    if (s.days.length > ACTIVE_DAYS_CAP) s.days = s.days.slice(-ACTIVE_DAYS_CAP);
+    saveStatsSoon();
+  }
+
+  /** 四個門檻同時成立,而且還沒回應過邀請時,才值得開口。 */
+  async function shouldAskReview() {
+    try {
+      const s = await loadStats();
+      if (s.review) return false;
+      if ((s.jobs || 0) < ASK_MIN_JOBS) return false;
+      if ((s.expands || 0) < ASK_MIN_EXPANDS) return false;
+      if (s.days.length < ASK_MIN_DAYS) return false;
+      if (Date.now() - (s.installedAt || 0) < ASK_MIN_AGE_DAYS * 86400000) return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * 記下使用者對邀請的回應。'dismissed' 與 'clicked' 都代表「不再問」——
+   * 按過「不用了」還一直跳出來,比從來沒問過更糟。
+   * 這裡不走延遲寫入:使用者可能馬上就離開頁面。
+   */
+  async function markReview(state) {
+    try {
+      const s = await loadStats();
+      s.review = state;
+      statsDirty = false;
+      await chrome.storage.local.set({ [STATS_KEY]: s });
+    } catch (e) {
+      /* 寫不進去最多就是下次再問一次 */
+    }
+  }
+
   ns.util = {
     parseAppearDate,
     formatDate,
@@ -175,6 +287,11 @@ var GJD = (function (ns) {
     custCodeFromUrl,
     cacheGet,
     cacheSet,
+    noteNewJob,
+    noteExpand,
+    noteActiveDay,
+    shouldAskReview,
+    markReview,
     makeQueue,
     noteFetch,
     getHealth,

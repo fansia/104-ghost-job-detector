@@ -134,7 +134,7 @@
 </p>
 
 <h2>本機儲存</h2>
-<p>本外掛使用 <code>chrome.storage.local</code> 在<strong>你自己的電腦上</strong>儲存兩類資料:</p>
+<p>本外掛使用 <code>chrome.storage.local</code> 在<strong>你自己的電腦上</strong>儲存三類資料:</p>
 <div class="tbl-wrap">
 <table>
   <tr><th>資料</th><th>用途</th><th>保存期間</th></tr>
@@ -142,9 +142,12 @@
   <tr><td>應徵人數快取</td><td>同上</td><td>1 小時後失效</td></tr>
   <tr><td>公司職缺快取</td><td>同上</td><td>6 小時後失效</td></tr>
   <tr><td>職缺觀察紀錄</td><td>記錄某個職缺被重新刊登過幾次</td><td>直到你手動清除</td></tr>
+  <tr><td>使用量計數</td><td>判斷什麼時候適合邀請你到 Chrome 商店留評價(看過幾個職缺、展開徽章幾次、哪幾天用過、有沒有回應過邀請)</td><td>直到你手動清除</td></tr>
 </table>
 </div>
 <p class="note" style="margin-top:14px">
+  使用量計數只有四個數字,<strong>不含任何職缺內容,也不含任何可識別你身分的資料</strong>。
+  它唯一的用途是避免在你才剛裝好、還沒用出心得時就跳出商店評價的邀請。<br />
   這些資料<strong>永遠不會離開你的裝置</strong>。你可以隨時從擴充功能的彈出視窗點「清除」一次刪除全部。
   移除本外掛時,Chrome 也會一併刪除。
 </p>
@@ -171,7 +174,7 @@
 <div class="tbl-wrap">
 <table>
   <tr><th>權限</th><th>為什麼需要</th></tr>
-  <tr><td><code>storage</code></td><td>在本機存放上述快取與觀察紀錄</td></tr>
+  <tr><td><code>storage</code></td><td>在本機存放上述快取、觀察紀錄與使用量計數</td></tr>
   <tr><td><code>https://www.104.com.tw/*</code></td><td>在 104 的職缺頁面上注入徽章,並向 104 網頁自己使用的內部 API 查詢職缺資料</td></tr>
 </table>
 </div>

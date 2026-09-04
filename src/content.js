@@ -24,6 +24,7 @@
     const today = new Date().toISOString().slice(0, 10);
     if (!h) {
       h = { firstSeen: today, lastAppear: appearDate || null, repostCount: 0 };
+      u.noteNewJob(); // 只在真的第一次看到時計數,所以是不重複的職缺數
     } else if (appearDate && h.lastAppear && appearDate !== h.lastAppear) {
       h.repostCount = (h.repostCount || 0) + 1;
       h.lastAppear = appearDate;
@@ -356,6 +357,8 @@
     const box = await chrome.storage.local.get('gjd:enabled');
     state.enabled = box['gjd:enabled'] !== false;
     if (!state.enabled) return;
+
+    u.noteActiveDay();
 
     route();
 

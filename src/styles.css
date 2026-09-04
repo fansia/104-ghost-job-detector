@@ -131,3 +131,46 @@
   margin-top: 10px;
   max-width: 720px;
 }
+
+/* 商店評價邀請。刻意做得比數據還安靜:它是附加的請求,不是使用者來看的東西,
+   所以不用徽章的警示色,也不搶原始數據的視覺重量。 */
+.gjd-ask {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--gjd-line);
+}
+
+.gjd-ask__text {
+  margin: 0 0 6px;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.gjd-ask__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.gjd-ask__go {
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.gjd-ask__go:hover { text-decoration: underline; }
+
+.gjd-ask__no {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: #9ca3af;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gjd-ask__no:hover { color: #6b7280; }
