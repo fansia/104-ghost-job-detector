@@ -7,6 +7,13 @@
 var GJD = (function (ns) {
   const u = ns.util;
 
+  /* 應徵人數區間。
+   * 104 於 2026-09 把 applyCnt 歸零,但 analysisType 這個欄位仍帶著人數級距,
+   * 而且與 104 自己頁面上顯示的「N~M 人應徵」實測 66 筆完全一致(1:1,零衝突)。
+   * 精確人數拿不到了,級距還在。 */
+  const APPLY_RANGE = { 1: '0~5 人', 2: '6~10 人', 3: '11~30 人', 4: '30 人以上' };
+  const applyRangeText = (t) => APPLY_RANGE[t] || null;
+
   /**
    * @param {object} f 事實集合
    *   hrBehaviorPR   0~1,104 內部的 HR 活躍度百分位
@@ -19,7 +26,9 @@ var GJD = (function (ns) {
    * 而且 104 只看得到站內訊息 —— HR 直接打電話或寄 email 不會被記錄。
    *   hasInteraction      是否有拿到 interactionRecord
    *   postedDays     刊登(最後更新)距今天數
-   *   applyCnt       應徵人數
+   *   applyCnt       應徵人數(104 於 2026-09 移除,現多為 null)
+   *   applyType      應徵人數級距 1~4
+   *   applyRangeText 級距的文字,例如「6~10 人」
    *   openJobs       公司目前總開缺數
    *   repostCount    我們觀察期間看到它重新刊登的次數
    *   salaryUndisclosed 是否待遇面議
@@ -30,10 +39,12 @@ var GJD = (function (ns) {
 
     // 近期沒人應徵、而且站內也沒有任何互動紀錄時,這兩個 null 沒有指控任何事,
     // 不該拿來扣分。條件必須同時成立:實測 63 個 0 人應徵的職缺裡有 44 個帶著
-    // 非 null 的互動紀錄(applyCnt 與 interactionRecord 的統計窗口不同),
-    // 只看 applyCnt === 0 就整組關掉,會把真實的紀錄一起蓋掉。
+    // 非 null 的互動紀錄,只看應徵人數就整組關掉會把真實的紀錄一起蓋掉。
+    // 104 改版後拿不到精確人數,改用最低級距(0~5 人)當代理 —— 它只會「移除」扣分,
+    // 寬鬆一點的方向比較安全,寧可少指控也不要誤指控。
+    const fewApplicants = f.applyCnt === 0 || f.applyType === 1;
     const quietWithNoRecord =
-      f.applyCnt === 0 && f.daysSinceProcessed === null && f.daysSinceReply === null;
+      fewApplicants && f.daysSinceProcessed === null && f.daysSinceReply === null;
 
     function add(points, text, kind) {
       score += points;
@@ -107,8 +118,8 @@ var GJD = (function (ns) {
     }
 
     // 5. 收了一堆履歷卻沒在處理
-    if (f.applyCnt >= 50 && f.daysSinceProcessed !== null && f.daysSinceProcessed > 7) {
-      add(10, `已有 ${f.applyCnt} 人應徵,但 HR 超過一週沒處理`);
+    if (f.applyType === 4 && f.daysSinceProcessed !== null && f.daysSinceProcessed > 7) {
+      add(10, '已有 30 人以上應徵,但 HR 超過一週沒處理');
     }
 
     // 6. 公司同時開的缺數(養人才庫的常見特徵)
@@ -155,7 +166,10 @@ var GJD = (function (ns) {
    * 這時候搶先投才有意義。實測交集約佔 30%。
    */
 
-  const OPP_MAX_APPLY = 3;
+  // 104 改版後拿不到精確人數,只剩級距。原本的門檻是「3 人以下」,
+  // 現在能取得的最低級距是「0~5 人」,所以條件實質上放寬了一點 ——
+  // 但「新刊登」與「HR 近期在看履歷」兩個條件沒動,三者的交集仍然夠窄。
+  const OPP_APPLY_TYPE = 1;
   const OPP_MAX_POSTED_DAYS = 7;
   const OPP_MAX_PROCESSED_DAYS = 7;
   // 比「正常」(0–19)更嚴:公司同時開 30 個缺就 +10,那種養人才庫的缺不該掛正向徽章
@@ -164,14 +178,14 @@ var GJD = (function (ns) {
   function detectOpportunity(f, score) {
     // 只在幾乎沒有風險訊號時才敢講「機會」,否則等於自打嘴巴
     if (score > OPP_MAX_SCORE) return null;
-    if (typeof f.applyCnt !== 'number' || f.applyCnt > OPP_MAX_APPLY) return null;
+    if (f.applyType !== OPP_APPLY_TYPE) return null;
     if (typeof f.postedDays !== 'number' || f.postedDays > OPP_MAX_POSTED_DAYS) return null;
     if (f.daysSinceProcessed === null || f.daysSinceProcessed > OPP_MAX_PROCESSED_DAYS) {
       return null;
     }
     return {
       reasons: [
-        `目前只有 ${f.applyCnt} 人應徵`,
+        `應徵人數 ${f.applyRangeText}`,
         `${u.daysAgoText(f.postedDays)}刊登`,
         `HR ${u.withinDaysText(f.daysSinceProcessed)}處理過履歷`,
       ],
@@ -217,6 +231,16 @@ var GJD = (function (ns) {
     // 誤判的代價卻是全部,所以 0 一律視為無資料。
     const hrPR = hrPRRaw === 0 ? null : hrPRRaw;
 
+    // 應徵人數級距:搜尋列 / 公司職缺 API / 職缺內頁都有
+    const analysisType =
+      typeof src.analysisType === 'number'
+        ? src.analysisType
+        : typeof ce.analysisType === 'number'
+          ? ce.analysisType
+          : jobDetail && typeof jobDetail.analysisType === 'number'
+            ? jobDetail.analysisType
+            : null;
+
     return {
       jobName: src.jobName || ce.jobName || (jobDetail && jobDetail.jobName),
       custName: src.custName || (jobDetail && jobDetail.custName),
@@ -236,7 +260,7 @@ var GJD = (function (ns) {
       appearDateText: u.formatDate(appearDate) || appearRaw || null,
       // 新格式下 applyCnt 恆為 0(實測 792/792),而 104 頁面上同一個職缺仍顯示
       // 「6~10 人應徵」—— 那是「不再提供」,不是「沒有人應徵」。
-      // 照著顯示「0 人」會是不實陳述,所以一律當成取不到。
+      // 照著顯示「0 人」會是不實陳述,所以一律當成取不到,改用 analysisType 的級距。
       applyCnt: descApi
         ? null
         : typeof src.applyCnt === 'number'
@@ -244,6 +268,8 @@ var GJD = (function (ns) {
           : typeof applyCnt === 'number'
             ? applyCnt
             : null,
+      applyType: analysisType,
+      applyRangeText: applyRangeText(analysisType),
       openJobs: typeof companyTotal === 'number' ? companyTotal : null,
       repostCount: history ? history.repostCount || 0 : 0,
       firstSeen: history ? history.firstSeen : null,

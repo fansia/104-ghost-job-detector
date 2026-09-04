@@ -7,7 +7,9 @@ var GJD = (function (ns) {
     const out = [];
     // 跟 score.js 用同一個條件:近期沒人應徵又完全沒紀錄時,這些 null 沒有指控任何事
     const quiet =
-      f.applyCnt === 0 && f.daysSinceProcessed === null && f.daysSinceReply === null;
+      (f.applyCnt === 0 || f.applyType === 1) &&
+      f.daysSinceProcessed === null &&
+      f.daysSinceReply === null;
     if (f.hasInteraction && !quiet) {
       // null 是「時間窗內沒有」,不是「從來沒有」—— 措辭必須守住這個差別
       if (f.daysSinceReply === null) out.push('30 天內無回覆紀錄');
@@ -21,6 +23,7 @@ var GJD = (function (ns) {
       out.push(`刊登 ${f.postedDays} 天`);
     }
     if (typeof f.applyCnt === 'number') out.push(`${f.applyCnt} 人應徵`);
+    else if (f.applyRangeText) out.push(`${f.applyRangeText}應徵`);
     return out.slice(0, 3);
   }
 
@@ -55,7 +58,15 @@ var GJD = (function (ns) {
         : '無資料'
     );
     // 抓不到就明講。整列消失會讓使用者以為是 0 人應徵,或以為外掛壞了。
-    push('應徵人數', typeof f.applyCnt === 'number' ? `${f.applyCnt} 人` : '無法取得');
+    // 104 於 2026-09 移除精確人數,只剩級距。有級距就顯示級距,兩者都沒有才說取不到。
+    push(
+      '應徵人數',
+      typeof f.applyCnt === 'number'
+        ? `${f.applyCnt} 人`
+        : f.applyRangeText
+          ? f.applyRangeText
+          : '無法取得'
+    );
     if (typeof f.openJobs === 'number') push('公司目前開缺', `${f.openJobs} 個`);
     if (f.repostCount) push('觀察到重新刊登', `${f.repostCount} 次`);
 

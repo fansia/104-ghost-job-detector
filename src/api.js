@@ -48,6 +48,9 @@ var GJD = (function (ns) {
       appearDate: x.appearDate,
       applyCnt: x.applyCnt,
       hrBehaviorPR: x.hrBehaviorPR,
+      // 104 改版後 applyCnt 恆為 0,應徵人數改由 analysisType 提供區間(1~4)
+      analysisType: x.analysisType,
+      hasHrBehavior: x.hasHrBehavior,
       interactionRecord: x.interactionRecord || null,
       salaryLow: x.salaryLow,
       salaryHigh: x.salaryHigh,
@@ -95,6 +98,8 @@ var GJD = (function (ns) {
       byJobCode[code] = {
         interactionRecord: j.interactionRecord || null,
         hrBehaviorPR: j.hrBehaviorPR,
+        analysisType: j.analysisType,
+        hasHrBehavior: j.hasHrBehavior,
         appearDate: j.appearDate,
         jobName: j.jobName,
       };
@@ -183,6 +188,8 @@ var GJD = (function (ns) {
       custCode: u.custCodeFromUrl(h.custUrl),
       appearDate: h.appearDate,
       hrBehaviorPR: h.hrBehaviorPR,
+      analysisType: h.analysisType,
+      hasHrBehavior: h.hasHrBehavior,
       // 職缺內頁自己就帶著互動紀錄,不必再靠公司職缺 API 繞一圈去找
       interactionRecord: d.interactionRecord || h.interactionRecord || null,
       closeDate: d.closeDate,
