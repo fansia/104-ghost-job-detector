@@ -235,6 +235,72 @@
     });
   }
 
+  /**
+   * 只知道 base36 職缺代碼時的分析路徑。
+   * 職缺詳細頁 API 沒有 applyCnt,也沒有 interactionRecord 的解析結果 ——
+   * analyse() 會用 custCode 去公司 API 拿互動紀錄,用 custName 去搜尋 API 補應徵人數。
+   * 職缺內頁與推薦頁共用這條路。
+   */
+  async function analyseByJobCode(jobCode, detail) {
+    const pseudoRow = {
+      jobCode,
+      jobName: detail.jobName,
+      custName: detail.custName,
+      custCode: detail.custCode,
+      appearDate: detail.appearDate,
+      hrBehaviorPR: detail.hrBehaviorPR,
+    };
+    return analyse(pseudoRow, detail);
+  }
+
+  /* ---------- AI 推薦頁 ---------- */
+
+  // 推薦頁的卡片 DOM 跟搜尋頁一模一樣(.job-summary[data-job-no]),但資料來源不同:
+  // 它的 data-job-no 是數字 ID,而且推薦 API 需要頁面自己維護的 jobNos 排除清單,
+  // 我們重建不出來。所以改走卡片連結裡的 base36 代碼 + 職缺內頁 API,
+  // 跟職缺內頁徽章同一條路徑。
+  async function decorateRecommendCard(card) {
+    const a = card.querySelector('a[href*="/job/"]');
+    const jobCode = a ? u.jobCodeFromUrl(a.getAttribute('href') || a.href) : null;
+    if (!jobCode) return;
+    if (card.dataset.gjdFor === jobCode) return;
+    card.dataset.gjdFor = jobCode;
+    const old = card.querySelector(':scope .gjd-badge');
+    if (old) old.remove();
+
+    const anchor = card.querySelector('.info-job') || card.querySelector('h2');
+    if (!anchor) return;
+
+    const loading = badge.renderLoading();
+    anchor.after(loading);
+
+    try {
+      const detail = await api.jobContent(jobCode);
+      // 卡片可能在等待期間被回收
+      if (card.dataset.gjdFor !== jobCode || !loading.isConnected) {
+        loading.remove();
+        return;
+      }
+      if (!detail) {
+        loading.replaceWith(badge.renderError('無法取得這個職缺的資料'));
+        return;
+      }
+      const { facts, result } = await analyseByJobCode(jobCode, detail);
+      if (card.dataset.gjdFor !== jobCode || !loading.isConnected) {
+        loading.remove();
+        return;
+      }
+      loading.replaceWith(badge.render(facts, result));
+    } catch (e) {
+      loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
+    }
+  }
+
+  function scanRecommendPage() {
+    if (!state.enabled) return;
+    document.querySelectorAll('.job-summary[data-job-no]').forEach(decorateRecommendCard);
+  }
+
   /* ---------- 職缺詳細頁 ---------- */
 
   async function decorateJobPage() {
@@ -256,16 +322,7 @@
       return;
     }
 
-    // 詳細頁 API 沒有 applyCnt,analyse() 會用 custName 另外去搜尋 API 補
-    const pseudoRow = {
-      jobCode,
-      jobName: detail.jobName,
-      custName: detail.custName,
-      custCode: detail.custCode,
-      appearDate: detail.appearDate,
-      hrBehaviorPR: detail.hrBehaviorPR,
-    };
-    const { facts, result } = await analyse(pseudoRow, detail);
+    const { facts, result } = await analyseByJobCode(jobCode, detail);
     const el = badge.render(facts, result);
     el.classList.add('gjd-badge--page');
     header.append(el);
@@ -276,6 +333,8 @@
   function route() {
     if (location.pathname.startsWith('/jobs/search')) {
       scanSearchPage();
+    } else if (location.pathname.startsWith('/jobs/recommend')) {
+      scanRecommendPage();
     } else if (/^\/job\/[0-9a-z]+/i.test(location.pathname)) {
       decorateJobPage();
     } else if (/^\/company\/[0-9a-z]+/i.test(location.pathname)) {

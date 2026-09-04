@@ -30,7 +30,7 @@
 
 ▍它會顯示什麼
 
-在 104 的搜尋結果、職缺內頁和公司頁,每個職缺會多出一列徽章:
+在 104 的搜尋結果、AI 推薦、職缺內頁和公司頁,每個職缺會多出一列徽章:
 
 [留意 32] 90 天內無回覆紀錄 ・ 11 天沒處理履歷 ・ 4 人應徵
 
@@ -124,7 +124,7 @@
 ### Permission justification — host permission `https://www.104.com.tw/*`
 
 ```
-本外掛必須在 104 的職缺頁面上執行,才能把資訊徽章注入到職缺卡片旁邊,並向 104 網站自身使用的內部 JSON API(/jobs/search/api/jobs、/job/ajax/content/、/api/companies/) 查詢該職缺的處理履歷紀錄。這些請求是同源請求,由使用者自己的瀏覽器直接送往 www.104.com.tw,不經過任何中介伺服器。本外掛不在 104 以外的任何網站執行,content script 的 matches 也僅限 104 的搜尋、職缺、公司三種頁面。
+本外掛必須在 104 的職缺頁面上執行,才能把資訊徽章注入到職缺卡片旁邊,並向 104 網站自身使用的內部 JSON API(/jobs/search/api/jobs、/job/ajax/content/、/api/companies/) 查詢該職缺的處理履歷紀錄。這些請求是同源請求,由使用者自己的瀏覽器直接送往 www.104.com.tw,不經過任何中介伺服器。本外掛不在 104 以外的任何網站執行,content script 的 matches 也僅限 104 的搜尋、AI 推薦、職缺、公司四種頁面。
 ```
 
 ### Are you using remote code?

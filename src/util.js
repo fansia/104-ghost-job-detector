@@ -35,6 +35,16 @@ var GJD = (function (ns) {
     return Math.floor((now - unixSeconds) / DAY);
   }
 
+  /**
+   * 把天數講成人話。0 是今天、1 是昨天,其餘用「N 天前」。
+   * 「0 天前」和「今明兩天」這種寫法讀者看不懂,也不精確。
+   */
+  function daysAgoText(days) {
+    if (days === 0) return '今天';
+    if (days === 1) return '昨天';
+    return days + ' 天前';
+  }
+
   /** 從職缺網址取出 base36 代碼,例如 https://www.104.com.tw/job/8i1y2?x=1 -> 8i1y2 */
   function jobCodeFromUrl(url) {
     if (!url) return null;
@@ -142,6 +152,7 @@ var GJD = (function (ns) {
     parseAppearDate,
     daysSince,
     daysSinceTs,
+    daysAgoText,
     jobCodeFromUrl,
     custCodeFromUrl,
     cacheGet,

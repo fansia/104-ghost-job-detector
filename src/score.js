@@ -74,7 +74,7 @@ var GJD = (function (ns) {
       } else {
         reasons.push({
           points: 0,
-          text: d <= 1 ? '最近一天內處理過履歷' : `${d} 天前處理過履歷`,
+          text: `${u.daysAgoText(d)}處理過履歷`,
           kind: 'good',
         });
       }
@@ -92,7 +92,7 @@ var GJD = (function (ns) {
       } else {
         reasons.push({
           points: 0,
-          text: `${f.daysSinceReply} 天前透過 104 回覆過應徵者`,
+          text: `${u.daysAgoText(f.daysSinceReply)}透過 104 回覆過應徵者`,
           kind: f.daysSinceReply > 30 ? 'info' : 'good',
         });
       }
@@ -171,10 +171,8 @@ var GJD = (function (ns) {
     return {
       reasons: [
         `目前只有 ${f.applyCnt} 人應徵`,
-        f.postedDays <= 1 ? '今明兩天才刊登' : `${f.postedDays} 天前刊登`,
-        f.daysSinceProcessed <= 1
-          ? 'HR 一天內處理過履歷'
-          : `HR ${f.daysSinceProcessed} 天前處理過履歷`,
+        `${u.daysAgoText(f.postedDays)}刊登`,
+        `HR ${u.daysAgoText(f.daysSinceProcessed)}處理過履歷`,
       ],
     };
   }

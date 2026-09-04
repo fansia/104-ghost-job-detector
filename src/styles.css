@@ -16,13 +16,28 @@
 .gjd-badge--orange { --gjd-line: #f5d7bd; --gjd-bg: #fdf3ea; --gjd-accent: #a85b16; }
 .gjd-badge--red    { --gjd-line: #f2c9c9; --gjd-bg: #fdf1f1; --gjd-accent: #b32626; }
 
-/* 正向徽章:少人應徵 + 新刊登 + HR 近期在看履歷。刻意跟「正常」的綠色分開,
-   「正常」是沒有壞消息,「機會」是有好消息,兩者不該長得一樣。 */
+/* 正向徽章:少人應徵 + 新刊登 + HR 近期在看履歷。
+   「正常」是沒有壞消息,「機會」是有好消息 —— 只換個綠色不夠,
+   在一整頁灰白卡片裡要能一眼跳出來,所以加左側色條、加深文字、加重底色。 */
 .gjd-badge--opportunity {
-  --gjd-line: #b9ddc4;
-  --gjd-bg: #eefaf1;
-  --gjd-accent: #1f7a3d;
+  --gjd-line: #7ec894;
+  --gjd-bg: #e8f9ee;
+  --gjd-accent: #17703a;
+  border-left: 4px solid var(--gjd-accent);
+  box-shadow: 0 1px 3px rgba(23, 112, 58, 0.16);
 }
+
+.gjd-badge--opportunity .gjd-pill {
+  letter-spacing: 0.06em;
+  padding: 2px 10px;
+}
+
+.gjd-badge--opportunity .gjd-facts {
+  color: #175c31;
+  font-weight: 500;
+}
+
+.gjd-badge--opportunity .gjd-caret { color: #4f9a6a; }
 
 .gjd-badge--loading {
   padding: 6px 10px;
