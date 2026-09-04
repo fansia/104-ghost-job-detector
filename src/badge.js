@@ -67,6 +67,22 @@ var GJD = (function (ns) {
     }
     el.append(table);
 
+    if (result.opportunity) {
+      const ul = document.createElement('ul');
+      ul.className = 'gjd-detail__reasons';
+      for (const t of result.opportunity.reasons) {
+        const li = document.createElement('li');
+        li.className = 'gjd-reason gjd-reason--good';
+        li.textContent = '✓ ' + t;
+        ul.append(li);
+      }
+      const li = document.createElement('li');
+      li.className = 'gjd-reason gjd-reason--info';
+      li.textContent = '• 少人應徵、新刊登、HR 近期在看履歷 —— 搶先投遞比較有機會';
+      ul.append(li);
+      el.append(ul);
+    }
+
     if (result.reasons.length) {
       const ul = document.createElement('ul');
       ul.className = 'gjd-detail__reasons';
@@ -91,8 +107,9 @@ var GJD = (function (ns) {
 
   /** 建立(或更新)一張卡片的徽章元素 */
   function render(facts, result) {
+    const opp = result.opportunity;
     const wrap = document.createElement('div');
-    wrap.className = 'gjd-badge gjd-badge--' + result.level;
+    wrap.className = 'gjd-badge gjd-badge--' + (opp ? 'opportunity' : result.level);
 
     const bar = document.createElement('button');
     bar.type = 'button';
@@ -100,11 +117,12 @@ var GJD = (function (ns) {
 
     const pill = document.createElement('span');
     pill.className = 'gjd-pill';
-    pill.textContent = LEVEL_TEXT[result.level] + ' ' + result.score;
+    pill.textContent = opp ? '機會' : LEVEL_TEXT[result.level] + ' ' + result.score;
 
     const facesEl = document.createElement('span');
     facesEl.className = 'gjd-facts';
-    facesEl.textContent = headlineFacts(facts).join(' ・ ');
+    // 是機會缺就把三個成立的條件講出來,而不是重複「正常」的風險摘要
+    facesEl.textContent = (opp ? opp.reasons : headlineFacts(facts)).join(' ・ ');
 
     const caret = document.createElement('span');
     caret.className = 'gjd-caret';

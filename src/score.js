@@ -141,7 +141,42 @@ var GJD = (function (ns) {
       label = '正常';
     }
 
-    return { score, level, label, reasons };
+    return { score, level, label, reasons, opportunity: detectOpportunity(f, score) };
+  }
+
+  /* ---------- 正向訊號:值得優先投的缺 ----------
+   *
+   * 「應徵人數少」單獨看沒有意義 —— 實測 1,144 筆,3 人以下的職缺佔 54%,
+   * 而且刊登天數中位數(4 天)並沒有比 11–30 人那組(3 天)新,
+   * 也就是說少人應徵不代表新刊登,反而有 16.6% 是「掛了三週還沒人投」的滯銷缺。
+   *
+   * 真正有意義的是三個條件的交集:沒什麼人投、缺是新的、而且 HR 這幾天真的在看履歷。
+   * 這時候搶先投才有意義。實測交集約佔 30%。
+   */
+
+  const OPP_MAX_APPLY = 3;
+  const OPP_MAX_POSTED_DAYS = 7;
+  const OPP_MAX_PROCESSED_DAYS = 7;
+  // 比「正常」(0–19)更嚴:公司同時開 30 個缺就 +10,那種養人才庫的缺不該掛正向徽章
+  const OPP_MAX_SCORE = 9;
+
+  function detectOpportunity(f, score) {
+    // 只在幾乎沒有風險訊號時才敢講「機會」,否則等於自打嘴巴
+    if (score > OPP_MAX_SCORE) return null;
+    if (typeof f.applyCnt !== 'number' || f.applyCnt > OPP_MAX_APPLY) return null;
+    if (typeof f.postedDays !== 'number' || f.postedDays > OPP_MAX_POSTED_DAYS) return null;
+    if (f.daysSinceProcessed === null || f.daysSinceProcessed > OPP_MAX_PROCESSED_DAYS) {
+      return null;
+    }
+    return {
+      reasons: [
+        `目前只有 ${f.applyCnt} 人應徵`,
+        f.postedDays <= 1 ? '今明兩天才刊登' : `${f.postedDays} 天前刊登`,
+        f.daysSinceProcessed <= 1
+          ? 'HR 一天內處理過履歷'
+          : `HR ${f.daysSinceProcessed} 天前處理過履歷`,
+      ],
+    };
   }
 
   /** 把各來源的原始資料整理成 scoreJob 需要的事實集合 */
