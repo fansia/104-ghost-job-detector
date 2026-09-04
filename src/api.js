@@ -48,6 +48,7 @@ var GJD = (function (ns) {
       appearDate: x.appearDate,
       applyCnt: x.applyCnt,
       hrBehaviorPR: x.hrBehaviorPR,
+      interactionRecord: x.interactionRecord || null,
       salaryLow: x.salaryLow,
       salaryHigh: x.salaryHigh,
     }));
@@ -182,6 +183,8 @@ var GJD = (function (ns) {
       custCode: u.custCodeFromUrl(h.custUrl),
       appearDate: h.appearDate,
       hrBehaviorPR: h.hrBehaviorPR,
+      // 職缺內頁自己就帶著互動紀錄,不必再靠公司職缺 API 繞一圈去找
+      interactionRecord: d.interactionRecord || h.interactionRecord || null,
       closeDate: d.closeDate,
       employees: d.employees,
     };

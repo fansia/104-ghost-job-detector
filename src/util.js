@@ -36,6 +36,23 @@ var GJD = (function (ns) {
     return Math.floor((Date.now() - date.getTime()) / 86400000);
   }
 
+  /**
+   * 解析 104 的互動描述字串。
+   *
+   * 2026-09 改版後,interactionRecord 的時間戳全部歸零,真正的資料改放在
+   * lastProcessedResumeDesc / lastCustReplyDesc 兩個中文字串裡。
+   * 實測 1,056 筆只有五種格式:
+   *   "3 分鐘前聯絡過求職者" / "5 小時前處理過履歷"  → 0(未滿一天)
+   *   "7 天內處理過履歷"                            → 7
+   * 認不得的字串一律回 null —— 寧可顯示「無資料」,也不要猜一個數字出來。
+   */
+  function parseInteractionDesc(text) {
+    if (!text || typeof text !== 'string') return null;
+    if (/分鐘前|小時前/.test(text)) return 0;
+    const m = text.match(/(\d+)\s*天/);
+    return m ? Number(m[1]) : null;
+  }
+
   function daysSinceTs(unixSeconds, nowSeconds) {
     if (!unixSeconds) return null;
     const now = nowSeconds || Date.now() / 1000;
@@ -281,6 +298,7 @@ var GJD = (function (ns) {
     formatDate,
     daysSince,
     daysSinceTs,
+    parseInteractionDesc,
     daysAgoText,
     withinDaysText,
     jobCodeFromUrl,

@@ -1,7 +1,7 @@
 /* 幽靈職缺評分。
  *
  * 原則:分數只是排序用的摘要,真正要給求職者看的是「事實」(HR 幾天沒處理履歷、
- * 近 90 天內有沒有站內回覆紀錄、掛了幾天)。誤判把真職缺標成假的,對雙方都是傷害,
+ * 近 30 天內有沒有站內回覆紀錄、掛了幾天)。誤判把真職缺標成假的,對雙方都是傷害,
  * 所以 UI 一律同時呈現原始數據,讓使用者自己判斷。
  */
 var GJD = (function (ns) {
@@ -11,11 +11,12 @@ var GJD = (function (ns) {
    * @param {object} f 事實集合
    *   hrBehaviorPR   0~1,104 內部的 HR 活躍度百分位
    *   daysSinceProcessed  HR 上次處理履歷距今天數(null = 近 30 天內無紀錄)
-   *   daysSinceReply      公司上次透過 104 回覆應徵者距今天數(null = 近 90 天內無紀錄)
+   *   daysSinceReply      公司上次透過 104 回覆應徵者距今天數(null = 近 30 天內無紀錄)
    *
-   * 這兩個欄位是滾動時間窗,不是全部歷史。實測 2,068 筆:處理履歷的值最大正好 30 天,
-   * 31 天以上一筆都沒有;回覆時間 99.8% 落在 90 天內。所以 null 代表「這段期間內沒有」,
-   * 不是「從來沒有」。而且 104 只看得到站內訊息 —— HR 直接打電話或寄 email 不會被記錄。
+   * 這兩個欄位是滾動時間窗,不是全部歷史。2026-09 改版後兩者都是 30 天
+   *(實測 1,056 筆,「N 天內」的最大值都正好是 30;改版前回覆窗是 90 天)。
+   * 所以 null 代表「這段期間內沒有」,不是「從來沒有」。
+   * 而且 104 只看得到站內訊息 —— HR 直接打電話或寄 email 不會被記錄。
    *   hasInteraction      是否有拿到 interactionRecord
    *   postedDays     刊登(最後更新)距今天數
    *   applyCnt       應徵人數
@@ -86,7 +87,7 @@ var GJD = (function (ns) {
       if (f.daysSinceReply === null) {
         reasons.push({
           points: 0,
-          text: '近 90 天內沒有透過 104 回覆應徵者(HR 也可能是用電話或 email 聯絡)',
+          text: '近 30 天內沒有透過 104 回覆應徵者(HR 也可能是用電話或 email 聯絡)',
           kind: 'info',
         });
       } else {
@@ -181,13 +182,29 @@ var GJD = (function (ns) {
   function buildFacts({ searchRow, companyEntry, companyTotal, applyCnt, history, jobDetail }) {
     const src = searchRow || {};
     const ce = companyEntry || {};
-    const ir = ce.interactionRecord || null;
+    // 互動紀錄三個來源都可能有:公司職缺 API、搜尋結果列、職缺內頁
+    const ir =
+      ce.interactionRecord ||
+      (src && src.interactionRecord) ||
+      (jobDetail && jobDetail.interactionRecord) ||
+      null;
+
+    /* 104 於 2026-09 改版:interactionRecord 的三個時間戳全部歸零,真正的資料改放進
+     * lastProcessedResumeDesc / lastCustReplyDesc 兩個中文字串;同時 applyCnt 與
+     * hrBehaviorPR 也一併變成 0(實測 792 筆無一例外)。
+     *
+     * 用「有沒有 Desc 這個 key」判斷格式,而不是看值是不是 0 ——
+     * 真的沒有互動紀錄的職缺也會是 0,兩者必須分得開。
+     * 這樣寫還有一個好處:104 若改回舊格式,會自動走回時間戳那條路,不必再改一次。
+     */
+    const descApi = !!ir && 'lastProcessedResumeDesc' in ir;
+
     const now = ir && ir.nowTimestamp ? ir.nowTimestamp : Date.now() / 1000;
 
     const appearRaw = src.appearDate || (jobDetail && jobDetail.appearDate) || ce.appearDate;
     const appearDate = u.parseAppearDate(appearRaw);
 
-    const hrPR =
+    const hrPRRaw =
       typeof src.hrBehaviorPR === 'number'
         ? src.hrBehaviorPR
         : typeof ce.hrBehaviorPR === 'number'
@@ -195,18 +212,34 @@ var GJD = (function (ns) {
           : jobDetail && typeof jobDetail.hrBehaviorPR === 'number'
             ? jobDetail.hrBehaviorPR
             : null;
+    // PR 0 代表「贏過 0% 的公司」,是最重的一項扣分(+30)。104 改版後這個欄位
+    // 恆為 0,把「沒給資料」當成「墊底」會冤枉每一個職缺 —— 真的墊底的是極少數,
+    // 誤判的代價卻是全部,所以 0 一律視為無資料。
+    const hrPR = hrPRRaw === 0 ? null : hrPRRaw;
 
     return {
       jobName: src.jobName || ce.jobName || (jobDetail && jobDetail.jobName),
       custName: src.custName || (jobDetail && jobDetail.custName),
       hrBehaviorPR: hrPR,
       hasInteraction: !!ir,
-      daysSinceProcessed: ir ? u.daysSinceTs(ir.lastProcessedResumeAtTime, now) : null,
-      daysSinceReply: ir ? u.daysSinceTs(ir.lastCustReplyTimestamp, now) : null,
+      daysSinceProcessed: !ir
+        ? null
+        : descApi
+          ? u.parseInteractionDesc(ir.lastProcessedResumeDesc)
+          : u.daysSinceTs(ir.lastProcessedResumeAtTime, now),
+      daysSinceReply: !ir
+        ? null
+        : descApi
+          ? u.parseInteractionDesc(ir.lastCustReplyDesc)
+          : u.daysSinceTs(ir.lastCustReplyTimestamp, now),
       postedDays: u.daysSince(appearDate),
       appearDateText: u.formatDate(appearDate) || appearRaw || null,
-      applyCnt:
-        typeof src.applyCnt === 'number'
+      // 新格式下 applyCnt 恆為 0(實測 792/792),而 104 頁面上同一個職缺仍顯示
+      // 「6~10 人應徵」—— 那是「不再提供」,不是「沒有人應徵」。
+      // 照著顯示「0 人」會是不實陳述,所以一律當成取不到。
+      applyCnt: descApi
+        ? null
+        : typeof src.applyCnt === 'number'
           ? src.applyCnt
           : typeof applyCnt === 'number'
             ? applyCnt

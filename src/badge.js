@@ -10,7 +10,7 @@ var GJD = (function (ns) {
       f.applyCnt === 0 && f.daysSinceProcessed === null && f.daysSinceReply === null;
     if (f.hasInteraction && !quiet) {
       // null 是「時間窗內沒有」,不是「從來沒有」—— 措辭必須守住這個差別
-      if (f.daysSinceReply === null) out.push('90 天內無回覆紀錄');
+      if (f.daysSinceReply === null) out.push('30 天內無回覆紀錄');
       else if (f.daysSinceReply > 30) out.push(`上次回覆 ${f.daysSinceReply} 天前`);
 
       if (f.daysSinceProcessed === null) out.push('30 天內無處理紀錄');
@@ -43,7 +43,7 @@ var GJD = (function (ns) {
         ? '無資料'
         : f.daysSinceReply !== null
           ? GJD.util.withinDaysText(f.daysSinceReply)
-          : '近 90 天內無紀錄'
+          : '近 30 天內無紀錄'
     );
     // 刊登日是日曆日期,要用 daysAgoText(0 = 今天),不能寫成「0 天前」
     push(
@@ -106,7 +106,7 @@ var GJD = (function (ns) {
     const note = document.createElement('p');
     note.className = 'gjd-detail__note';
     note.textContent =
-      '資料來自 104 網頁自己使用的內部 API,僅供參考。處理履歷為 30 天、回覆為 90 天的滾動紀錄,' +
+      '資料來自 104 網頁自己使用的內部 API,僅供參考。處理履歷與回覆都是 30 天的滾動紀錄,' +
       '「無紀錄」是指這段期間內沒有,不是從來沒有;HR 若以電話或 email 聯絡,104 也不會記錄。' +
       '另外「處理履歷」不一定是真人動作,系統自動配對可能也算在內。' +
       '分數高不代表這是假職缺,請搭配上面的原始數據自行判斷。';
