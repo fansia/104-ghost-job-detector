@@ -1,4 +1,9 @@
-/* 104 公開 API 封裝。content script 跑在 www.104.com.tw 底下,全部是同源請求。 */
+/* 104 內部 API 封裝。
+ *
+ * 這些不是 104 官方對外開放、需申請金鑰的 Open API,而是 104 網頁前端自己在載入
+ * 職缺時就會呼叫的內部 JSON 端點,未公開文件。content script 跑在 www.104.com.tw
+ * 底下,全部是同源請求。
+ */
 var GJD = (function (ns) {
   const u = ns.util;
   const queue = u.makeQueue(2, 250); // 同時最多 2 個請求,每個間隔 250ms

@@ -83,7 +83,7 @@ var GJD = (function (ns) {
     const note = document.createElement('p');
     note.className = 'gjd-detail__note';
     note.textContent =
-      '資料來自 104 公開 API,僅供參考。分數高不代表這是假職缺,請搭配上面的原始數據自行判斷。';
+      '資料來自 104 網頁自己使用的內部 API,僅供參考。分數高不代表這是假職缺,請搭配上面的原始數據自行判斷。';
     el.append(note);
     return el;
   }
