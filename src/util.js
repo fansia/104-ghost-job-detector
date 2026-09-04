@@ -97,6 +97,47 @@ var GJD = (function (ns) {
     };
   }
 
+  /* ---------- 資料來源健康狀態 ----------
+   * 這些端點沒有公開文件,104 隨時可能改版。連續失敗時要讓使用者知道是「外掛抓不到了」,
+   * 而不是「這個職缺剛好沒資料」—— 靜默消失是最糟的失敗方式。
+   */
+
+  const HEALTH_KEY = 'gjd:health';
+  let health = null;
+
+  async function loadHealth() {
+    if (health) return health;
+    const box = await chrome.storage.local.get(HEALTH_KEY);
+    health = box[HEALTH_KEY] || { fails: 0, lastFailAt: null, lastOkAt: null };
+    return health;
+  }
+
+  /** 記錄一次請求成敗。成功會把連續失敗計數歸零。 */
+  async function noteFetch(ok) {
+    try {
+      const h = await loadHealth();
+      if (ok) {
+        h.lastOkAt = Date.now();
+        if (!h.fails) return; // 一切正常時不必每次都寫入 storage
+        h.fails = 0;
+      } else {
+        h.fails = (h.fails || 0) + 1;
+        h.lastFailAt = Date.now();
+      }
+      await chrome.storage.local.set({ [HEALTH_KEY]: h });
+    } catch (e) {
+      /* 健康狀態只是輔助資訊,寫不進去不影響主要功能 */
+    }
+  }
+
+  async function getHealth() {
+    try {
+      return await loadHealth();
+    } catch (e) {
+      return { fails: 0, lastFailAt: null, lastOkAt: null };
+    }
+  }
+
   ns.util = {
     parseAppearDate,
     daysSince,
@@ -106,6 +147,8 @@ var GJD = (function (ns) {
     cacheGet,
     cacheSet,
     makeQueue,
+    noteFetch,
+    getHealth,
   };
   return ns;
 })(typeof GJD === 'undefined' ? {} : GJD);

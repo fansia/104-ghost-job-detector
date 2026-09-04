@@ -165,7 +165,7 @@
       return;
     }
     if (!row) {
-      loading.remove();
+      loading.replaceWith(badge.renderError('找不到這個職缺的資料'));
       return;
     }
 
@@ -177,7 +177,7 @@
       }
       loading.replaceWith(badge.render(facts, result));
     } catch (e) {
-      loading.remove();
+      loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
     }
   }
 
@@ -220,7 +220,7 @@
       }
       loading.replaceWith(badge.render(facts, result));
     } catch (e) {
-      loading.remove();
+      loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
     }
   }
 
@@ -249,7 +249,12 @@
     if (old) old.remove();
 
     const detail = await api.jobContent(jobCode);
-    if (!detail) return;
+    if (!detail) {
+      const err = badge.renderError('無法取得這個職缺的資料,104 的資料格式可能已變更');
+      err.classList.add('gjd-badge--page');
+      header.append(err);
+      return;
+    }
 
     // 詳細頁 API 沒有 applyCnt,analyse() 會用 custName 另外去搜尋 API 補
     const pseudoRow = {

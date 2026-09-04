@@ -10,8 +10,12 @@ var GJD = (function (ns) {
   /**
    * @param {object} f 事實集合
    *   hrBehaviorPR   0~1,104 內部的 HR 活躍度百分位
-   *   daysSinceProcessed  HR 上次處理履歷距今天數(null = 無紀錄)
-   *   daysSinceReply      公司上次回覆應徵者距今天數(null = 從未回覆)
+   *   daysSinceProcessed  HR 上次處理履歷距今天數(null = 近 30 天內無紀錄)
+   *   daysSinceReply      公司上次透過 104 回覆應徵者距今天數(null = 近 90 天內無紀錄)
+   *
+   * 這兩個欄位是滾動時間窗,不是全部歷史。實測 2,068 筆:處理履歷的值最大正好 30 天,
+   * 31 天以上一筆都沒有;回覆時間 99.8% 落在 90 天內。所以 null 代表「這段期間內沒有」,
+   * 不是「從來沒有」。而且 104 只看得到站內訊息 —— HR 直接打電話或寄 email 不會被記錄。
    *   hasInteraction      是否有拿到 interactionRecord
    *   postedDays     刊登(最後更新)距今天數
    *   applyCnt       應徵人數
@@ -23,11 +27,12 @@ var GJD = (function (ns) {
     let score = 0;
     const reasons = [];
 
-    // 沒人應徵,就沒有履歷可處理、也沒有人可以回覆 —— 這時 interactionRecord 是空的
-    // 是數學上的必然,不是「已讀不回」的證據,拿來扣分等於處罰一個還沒被看見的缺。
-    // (實測同一家公司的 19 個缺有 17 個不同的處理時間,確認這是職缺層級的資料;
-    //  唯一 0 人應徵的那個缺,兩個欄位正好都是 null。)
-    const noApplicants = f.applyCnt === 0;
+    // 近期沒人應徵、而且站內也沒有任何互動紀錄時,這兩個 null 沒有指控任何事,
+    // 不該拿來扣分。條件必須同時成立:實測 63 個 0 人應徵的職缺裡有 44 個帶著
+    // 非 null 的互動紀錄(applyCnt 與 interactionRecord 的統計窗口不同),
+    // 只看 applyCnt === 0 就整組關掉,會把真實的紀錄一起蓋掉。
+    const quietWithNoRecord =
+      f.applyCnt === 0 && f.daysSinceProcessed === null && f.daysSinceReply === null;
 
     function add(points, text, kind) {
       score += points;
@@ -50,27 +55,22 @@ var GJD = (function (ns) {
     }
 
     // 2. 上次處理履歷的時間 —— 最能反映「這個缺還有沒有人在看」
-    if (f.hasInteraction && noApplicants) {
-      if (f.daysSinceProcessed !== null) {
-        reasons.push({
-          points: 0,
-          text: `${f.daysSinceProcessed} 天前處理過履歷`,
-          kind: 'good',
-        });
-      }
+    if (f.hasInteraction && quietWithNoRecord) {
       reasons.push({
         points: 0,
-        text: '尚無人應徵,無從判斷 HR 的處理與回覆行為',
+        text: '近期無人應徵,104 站內也沒有互動紀錄,無從判斷 HR 的行為',
         kind: 'info',
       });
     } else if (f.hasInteraction) {
+      // 門檻依實測分布訂:91% 的職缺在 7 天內處理過履歷,超過 7 天已是最差的 9.4%,
+      // 超過 14 天是最差的 3.4%,而 null 代表落在 30 天的窗外,是最差的一檔。
       const d = f.daysSinceProcessed;
       if (d === null) {
-        add(25, '沒有任何處理履歷的紀錄');
+        add(30, '近 30 天內沒有處理過任何履歷');
       } else if (d > 14) {
-        add(25, `已經 ${d} 天沒有處理履歷`);
+        add(22, `已經 ${d} 天沒有處理履歷`);
       } else if (d > 7) {
-        add(12, `${d} 天沒有處理履歷`);
+        add(14, `${d} 天沒有處理履歷`);
       } else {
         reasons.push({
           points: 0,
@@ -79,18 +79,21 @@ var GJD = (function (ns) {
         });
       }
 
-      // 3. 有沒有真的回覆過應徵者(已讀不回的核心指標)
+      // 3. 有沒有透過 104 回覆應徵者 —— 呈現,但不計分。
+      //    104 只記錄得到站內訊息的往來,很多 HR 是直接打電話或寄 email 聯絡應徵者,
+      //    那些完全不會出現在這裡。既然「無紀錄」有一個完全無辜的解釋,
+      //    就不該拿它扣分,只把事實擺出來讓使用者自己判斷。
       if (f.daysSinceReply === null) {
-        add(20, '從未回覆過任何應徵者');
-      } else if (f.daysSinceReply > 90) {
-        add(12, `上次回覆應徵者是 ${f.daysSinceReply} 天前`);
-      } else if (f.daysSinceReply > 30) {
-        add(6, `上次回覆應徵者是 ${f.daysSinceReply} 天前`);
+        reasons.push({
+          points: 0,
+          text: '近 90 天內沒有透過 104 回覆應徵者(HR 也可能是用電話或 email 聯絡)',
+          kind: 'info',
+        });
       } else {
         reasons.push({
           points: 0,
-          text: `${f.daysSinceReply} 天前回覆過應徵者`,
-          kind: 'good',
+          text: `${f.daysSinceReply} 天前透過 104 回覆過應徵者`,
+          kind: f.daysSinceReply > 30 ? 'info' : 'good',
         });
       }
     }

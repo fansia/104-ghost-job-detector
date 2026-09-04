@@ -22,6 +22,14 @@
   font-size: 12px;
 }
 
+.gjd-badge--error {
+  padding: 6px 10px;
+  color: #8a6b12;
+  background: #fdf8ec;
+  border-color: #f0e2bd;
+  font-size: 12px;
+}
+
 .gjd-bar {
   display: flex;
   align-items: center;

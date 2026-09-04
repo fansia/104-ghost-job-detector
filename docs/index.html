@@ -127,8 +127,8 @@
   <img src="screenshot.png" alt="104 職缺頁上的偵測徽章,展開後顯示 HR 活躍度、上次處理履歷、上次回覆應徵者、刊登天數、應徵人數等原始數據" />
   <figcaption>
     點開徽章會展開完整原始數據。注意右下角 104 自己只顯示「6~10 人應徵」,
-    徽章給的是精確的 <strong>8 人</strong>;而「從未回覆過任何應徵者」這件事,
-    104 從頭到尾不會告訴你。
+    徽章給的是精確的 <strong>8 人</strong>;而「近 90 天內沒有透過 104 回覆過任何應徵者」
+    這件事,104 從頭到尾不會告訴你。
   </figcaption>
 </figure>
 
@@ -150,7 +150,10 @@
       下載 <code>ghost-job-detector-x.y.z.zip</code>,解壓縮到一個你不會刪掉的資料夾。
     </li>
     <li>打開 Chrome,在網址列輸入 <code>chrome://extensions/</code> 後按 Enter。</li>
-    <li>把右上角的<strong>「開發人員模式」</strong>打開。</li>
+    <li>
+      把右上角的<strong>「開發人員模式」</strong>打開。
+      <strong>裝好之後也要保持開啟</strong> —— 關掉它,這個外掛就會被 Chrome 一起停用。
+    </li>
     <li>點左上角<strong>「載入未封裝項目」</strong>,選擇剛才解壓縮出來的資料夾。</li>
     <li>
       到 <a href="https://www.104.com.tw/jobs/search/">104 找工作</a> 搜尋任何職缺,
@@ -165,6 +168,55 @@
   </p>
 </div>
 
+<h2>支援環境</h2>
+
+<div class="tbl-wrap">
+<table>
+  <tr><th>環境</th><th>支援</th><th>說明</th></tr>
+  <tr><td>Chrome(桌面版)</td><td>✅</td><td>macOS、Windows、Linux 都可以 —— 決定的是瀏覽器,不是作業系統</td></tr>
+  <tr><td>Edge</td><td>✅</td><td>同為 Chromium 核心,安裝方式相同</td></tr>
+  <tr><td>Brave、Vivaldi 等 Chromium 瀏覽器</td><td>✅</td><td>同上</td></tr>
+  <tr><td>Firefox</td><td>❌</td><td>擴充功能格式不同,目前沒有 Firefox 版</td></tr>
+  <tr><td>Safari</td><td>❌</td><td>同上</td></tr>
+  <tr><td>手機 / 平板</td><td>❌</td><td>Android 與 iOS 版 Chrome 都不支援擴充功能,這是瀏覽器本身的限制</td></tr>
+</table>
+</div>
+
+<h2>裝了但沒反應?</h2>
+
+<div class="card">
+  <p style="margin:0 0 14px"><strong>依照最常見的順序檢查:</strong></p>
+  <ol class="steps">
+    <li>
+      <strong>「開發人員模式」被關掉了。</strong>
+      這是最常見的原因。手動安裝的擴充功能靠它才能執行,安裝完把它關掉,外掛就會一起被停用。
+      到 <code>chrome://extensions/</code> 確認右上角的開關是開的。
+    </li>
+    <li>
+      <strong>安裝後沒有重新整理 104 的頁面。</strong>
+      外掛只會在頁面載入時注入,已經開著的分頁要重新整理一次。
+    </li>
+    <li>
+      <strong>頁面不在支援範圍內。</strong>
+      目前只在 104 的<strong>搜尋結果</strong>、<strong>職缺內頁</strong>和<strong>公司頁</strong>運作,
+      其他頁面(例如首頁、履歷管理)不會有徽章。
+    </li>
+    <li>
+      <strong>外掛被自己關掉了。</strong>
+      點瀏覽器工具列上的外掛圖示,確認「啟用偵測」是開的。
+    </li>
+    <li>
+      <strong>Chrome 啟動時跳出「停用開發人員模式的擴充功能」。</strong>
+      點<strong>「保留」</strong>,不要點停用。
+    </li>
+  </ol>
+  <p class="note" style="margin-top:16px">
+    如果徽章出現但寫著「無法取得資料」或「資料格式可能已變更」,那多半是 104 改版了。
+    外掛的彈出視窗會顯示連續失敗的次數,麻煩到
+    <a href="https://github.com/fansia/104-ghost-job-detector/issues">GitHub Issues</a> 回報。
+  </p>
+</div>
+
 <h2>評分怎麼算</h2>
 <p>
   分數 0–100,由多個訊號加總而成,分級為
@@ -175,10 +227,10 @@
 <table>
   <tr><th>訊號</th><th>分數</th></tr>
   <tr><td>HR 活躍度 PR &lt; 30 / &lt; 50</td><td>+30 / +15</td></tr>
-  <tr><td>超過 14 天 / 7 天沒處理履歷</td><td>+25 / +12</td></tr>
-  <tr><td>從未回覆過應徵者</td><td>+20</td></tr>
-  <tr><td>上次回覆超過 90 天 / 30 天</td><td>+12 / +6</td></tr>
-  <tr><td>刊登超過 90 / 60 / 30 天</td><td>+18 / +12 / +6</td></tr>
+  <tr><td>近 30 天內無處理紀錄</td><td>+30</td></tr>
+  <tr><td>超過 14 天 / 7 天沒處理履歷</td><td>+22 / +14</td></tr>
+  <tr><td>近 90 天內無 104 站內回覆紀錄</td><td><strong>不計分</strong>(僅呈現)</td></tr>
+    <tr><td>刊登超過 90 / 60 / 30 天</td><td>+18 / +12 / +6</td></tr>
   <tr><td>50 人以上應徵但一週沒處理</td><td>+10</td></tr>
   <tr><td>公司同時開 30 / 15 個缺以上</td><td>+10 / +5</td></tr>
   <tr><td>觀察期間重新刊登 2 次以上</td><td>+15</td></tr>
@@ -188,7 +240,7 @@
 <p class="note" style="margin-top:14px">
   <strong>0 人應徵的職缺不套用互動訊號。</strong>
   沒人投,就沒有履歷可處理、也沒有人可以回覆,紀錄是空的是必然,不是「已讀不回」的證據 ——
-  這時「沒處理履歷」和「從未回覆」都不扣分,改顯示中性提示。刊登時長等其他訊號照算。
+  這時「無處理紀錄」和「無回覆紀錄」都不扣分,改顯示中性提示。刊登時長等其他訊號照算。
 </p>
 <p class="note" style="margin-top:14px">
   <strong>分數只是排序用的摘要。</strong>

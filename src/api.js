@@ -12,9 +12,16 @@ var GJD = (function (ns) {
   const APPLY_TTL = 60 * 60 * 1000; // 應徵人數快取 1 小時
 
   async function getJson(url) {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url);
-    return res.json();
+    try {
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url);
+      const json = await res.json();
+      u.noteFetch(true);
+      return json;
+    } catch (e) {
+      u.noteFetch(false);
+      throw e;
+    }
   }
 
   /**
