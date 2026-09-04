@@ -2,3 +2,4 @@
 dist/
 *.zip
 node_modules/
+.shots/

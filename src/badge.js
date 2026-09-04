@@ -45,7 +45,15 @@ var GJD = (function (ns) {
           ? GJD.util.withinDaysText(f.daysSinceReply)
           : '近 90 天內無紀錄'
     );
-    push('刊登(更新)日期', f.appearDateText ? `${f.appearDateText}(${f.postedDays} 天前)` : '無資料');
+    // 刊登日是日曆日期,要用 daysAgoText(0 = 今天),不能寫成「0 天前」
+    push(
+      '刊登(更新)日期',
+      f.appearDateText
+        ? typeof f.postedDays === 'number'
+          ? `${f.appearDateText}(${GJD.util.daysAgoText(f.postedDays)})`
+          : f.appearDateText
+        : '無資料'
+    );
     // 抓不到就明講。整列消失會讓使用者以為是 0 人應徵,或以為外掛壞了。
     push('應徵人數', typeof f.applyCnt === 'number' ? `${f.applyCnt} 人` : '無法取得');
     if (typeof f.openJobs === 'number') push('公司目前開缺', `${f.openJobs} 個`);

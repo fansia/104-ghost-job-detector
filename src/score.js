@@ -204,7 +204,7 @@ var GJD = (function (ns) {
       daysSinceProcessed: ir ? u.daysSinceTs(ir.lastProcessedResumeAtTime, now) : null,
       daysSinceReply: ir ? u.daysSinceTs(ir.lastCustReplyTimestamp, now) : null,
       postedDays: u.daysSince(appearDate),
-      appearDateText: appearRaw,
+      appearDateText: u.formatDate(appearDate) || appearRaw || null,
       applyCnt:
         typeof src.applyCnt === 'number'
           ? src.applyCnt

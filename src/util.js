@@ -24,6 +24,13 @@ var GJD = (function (ns) {
     return null;
   }
 
+  /** 104 的日期有三種格式(20260904 / 2026/09/04 / 9/04),統一成 YYYY/MM/DD 再顯示。 */
+  function formatDate(date) {
+    if (!date) return null;
+    const p = (n) => String(n).padStart(2, '0');
+    return date.getFullYear() + '/' + p(date.getMonth() + 1) + '/' + p(date.getDate());
+  }
+
   function daysSince(date) {
     if (!date) return null;
     return Math.floor((Date.now() - date.getTime()) / 86400000);
@@ -159,6 +166,7 @@ var GJD = (function (ns) {
 
   ns.util = {
     parseAppearDate,
+    formatDate,
     daysSince,
     daysSinceTs,
     daysAgoText,
