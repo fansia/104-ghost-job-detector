@@ -31,7 +31,18 @@ var GJD = (function (ns) {
     const rows = [];
     const push = (label, value) => rows.push({ label, value });
 
-    push('HR 活躍度', typeof f.hrBehaviorPR === 'number' ? `PR ${Math.round(f.hrBehaviorPR * 100)}(104 內部指標)` : '無資料');
+    // 104 停止下發 PR 數值後,只剩 hasHrBehavior 這個布林值(等價 PR >= 0.7)。
+    // false 分不出「中段班」和「墊底」,措辭不能寫成「不活躍」。
+    push(
+      'HR 活躍度',
+      typeof f.hrBehaviorPR === 'number'
+        ? `PR ${Math.round(f.hrBehaviorPR * 100)}(104 內部指標)`
+        : f.hrActive === true
+          ? '積極徵才中(104 標準:活躍度前 30%)'
+          : f.hrActive === false
+            ? '未達 104 的「積極徵才中」標準'
+            : '無資料'
+    );
     push(
       '上次處理履歷',
       !f.hasInteraction
