@@ -27,7 +27,7 @@ var GJD = (function (ns) {
    * 而且 104 只看得到站內訊息 —— HR 直接打電話或寄 email 不會被記錄。
    *   hasInteraction      是否有拿到 interactionRecord
    *   postedDays     刊登(最後更新)距今天數
-   *   hrActive       104 的「積極徵才中」標準(等價 PR >= 0.7);false 不代表不活躍
+   *   hrActive       104 的「積極徵才中」標準(近似 PR >= 0.7);false 不代表不活躍
    *   applyCnt       精確應徵人數(來自應徵分析端點),取不到時為 null
    *   applyType      應徵人數級距 1~4
    *   applyRangeText 級距的文字,例如「6~10 人」
@@ -67,9 +67,7 @@ var GJD = (function (ns) {
         });
       }
     } else if (f.hrActive === true) {
-      // 拿不到 PR 數值時的替代路徑,見 buildFacts 的說明。
-      // 只給正向訊號:hrActive 為 false 只代表 PR 沒到 0.7,無法區分「0.65」和「墊底」,
-      // 拿它扣分會冤枉一大票中段班的職缺。
+      // 拿不到 PR 數值時的替代路徑。只給正向、不拿 false 扣分的理由見 buildFacts。
       reasons.push({ points: 0, text: 'HR 活躍度達 104 的「積極徵才中」標準', kind: 'good' });
     }
 
@@ -249,11 +247,19 @@ var GJD = (function (ns) {
     /* hasHrBehavior:PR 歸零後唯一還活著的活躍度訊號。
      *
      * 104 前端判斷要不要掛「積極徵才中」的條件是 hasHrBehavior || hrBehaviorPR >= 0.7,
-     * 也就是說這個布林值等價於「PR >= 0.7」。實測 50 筆與 PR 的一致率 96%,
-     * 兩筆不一致的 PR 是 0.737 與 0.753,都緊貼門檻 —— 那是快照時間差,不是規則不同。
+     * 門檻 0.7 來自它自己的程式碼(isActive: e => e >= .7)。這個布林值高度近似
+     * 「PR >= 0.7」但不是恆等:隨機抽 70 筆同時取兩者,一致率 97%,true 佔 27%、
+     * PR>=0.7 佔 30%,比例吻合;但有 PR 0.83 卻回 false 的樣本,離門檻太遠,
+     * 不能用快照時間差解釋。當成近似用可以,別當成純函數。
      *
-     * 它只有單向意義:true 代表活躍度前 30%,false 只代表沒到 0.7,
-     * 中段班和墊底混在一起,分不出來,所以 false 不能拿來扣分。
+     * 這條線切得有意義:相似職缺 API 仍下發真實 PR,拿 2,252 筆比對互動紀錄,
+     * PR 高低與履歷處理時效嚴格單調 —— 兩側的處理履歷中位數是 0 天對 2 天,
+     * 七天內處理 95% 對 72%,完全沒有處理紀錄 0% 對 14%。
+     *
+     * 但只拿 true 當正向訊號、false 不扣分,理由不是它沒有鑑別力,而是:
+     * false 涵蓋 PR 0~0.7 一整段,內部差異太大(0.6~0.7 那檔中位 1 天、九成在
+     * 七天內處理,和 true 組幾乎沒差),而真正該被指控的那批(PR<0.1,中位 17 天、
+     * 半數完全沒有處理紀錄)早就被下面的時效規則扣滿了,再扣一次是重複計算。
      */
     const hrActive =
       typeof src.hasHrBehavior === 'boolean'

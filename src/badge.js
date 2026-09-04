@@ -31,8 +31,9 @@ var GJD = (function (ns) {
     const rows = [];
     const push = (label, value) => rows.push({ label, value });
 
-    // 104 停止下發 PR 數值後,只剩 hasHrBehavior 這個布林值(等價 PR >= 0.7)。
+    // 104 停止下發 PR 數值後,只剩 hasHrBehavior 這個布林值(近似 PR >= 0.7,見 score.js)。
     // false 分不出「中段班」和「墊底」,措辭不能寫成「不活躍」。
+    // 「前 30%」是隨機抽樣量到的(true 佔 27%、PR>=0.7 佔 30%),不是從門檻反推的。
     push(
       'HR 活躍度',
       typeof f.hrBehaviorPR === 'number'
