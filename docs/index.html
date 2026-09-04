@@ -119,31 +119,35 @@
 <p>
   104 的資料庫其實記錄了每個職缺「上次處理履歷」和「上次回覆應徵者」的時間,
   而且 104 網頁自己載入職缺時就會把這些欄位抓回你的瀏覽器。但 104 只會在頁面上顯示正面的那一半
-  (例如「7 天內處理過履歷」),從不告訴你這家公司<strong>從來沒有回覆過任何應徵者</strong>。
+  (例如「7 天內處理過履歷」),從不告訴你這家公司<strong>近 90 天內一個應徵者都沒回覆過</strong>。
 </p>
 <p>這個外掛把另一半補上。每張職缺卡片會多出一列徽章:</p>
 
 <figure class="shot">
   <img src="screenshot.png" alt="104 職缺頁上的偵測徽章,展開後顯示 HR 活躍度、上次處理履歷、上次回覆應徵者、刊登天數、應徵人數等原始數據" />
   <figcaption>
-    點開徽章會展開完整原始數據。注意右下角 104 自己只顯示「6~10 人應徵」,
-    徽章給的是精確的 <strong>8 人</strong>;而「近 90 天內沒有透過 104 回覆過任何應徵者」
-    這件事,104 從頭到尾不會告訴你。
+    點開徽章會展開完整原始數據。注意右邊 104 自己只給「0~5 人應徵」,
+    徽章給的是精確的 <strong>1 人</strong>;而「上次回覆是 56 天前」「11 天沒處理履歷」
+    這些,104 從頭到尾不會顯示。
   </figcaption>
 </figure>
 
 <h2>安裝</h2>
 
 <div class="card">
-  <h3 style="margin-top:0">方式一:Chrome 線上應用程式商店</h3>
+  <h3 style="margin-top:0">方式一:Chrome 線上應用程式商店(建議)</h3>
+  <p style="margin:0 0 14px">
+    <a class="btn" href="https://chromewebstore.google.com/detail/ollabfbopbnckocijfnahjeaoalbnbej">前往 Chrome 線上應用程式商店</a>
+  </p>
   <p class="note" style="margin-bottom:0">
-    送審中,通過後這裡會放上一鍵安裝的連結,並且能自動更新。
-    在那之前請用下面的方式二。
+    一鍵安裝,而且會自動更新。<br />
+    商店的版本可能會落後 <a href="https://github.com/fansia/104-ghost-job-detector/releases/latest">GitHub Releases</a> 一段時間
+    —— 每次改版都要重新送審,而審查通常要數週。想要最新版,用下面的方式二。
   </p>
 </div>
 
 <div class="card">
-  <h3 style="margin-top:0">方式二:手動安裝(現在就能用)</h3>
+  <h3 style="margin-top:0">方式二:手動安裝(想搶先用最新版)</h3>
   <ol class="steps">
     <li>
       到 <a href="https://github.com/fansia/104-ghost-job-detector/releases/latest">最新版本頁面</a>
@@ -168,12 +172,12 @@
   </p>
 </div>
 
-<h2>上架時通知我</h2>
+<h2>有重大更新時通知我</h2>
 
 <div class="card">
   <p style="margin:0 0 12px">
-    Chrome 線上應用程式商店審核通過時,我寄一封信給你,就這一封。
-    之後只有重大更新才會再寄(大概一年幾次),隨時可以退訂。
+    已經上架了,所以那封「上架通知」不會再寄。之後只有重大更新
+    (例如 104 改版導致外掛失效、或計分方式有大調整)才會寄,大概一年幾次,隨時可以退訂。
   </p>
   <p style="margin:0 0 14px">
     <a class="btn" href="https://ericyensc.substack.com/s/ghost-job-detector">留下 email</a>
