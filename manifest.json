@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "幽靈職缺偵測器(104 非官方)",
   "short_name": "幽靈職缺偵測器",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "在 104 人力銀行的職缺上顯示 HR 實際處理履歷的紀錄,幫你避開已讀不回的幽靈職缺。非 104 官方推出。",
   "icons": {
     "16": "icons/icon16.png",

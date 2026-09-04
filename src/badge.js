@@ -15,7 +15,7 @@ var GJD = (function (ns) {
 
       if (f.daysSinceProcessed === null) out.push('30 天內無處理紀錄');
       else if (f.daysSinceProcessed > 7) out.push(`${f.daysSinceProcessed} 天沒處理履歷`);
-      else out.push(`${GJD.util.daysAgoText(f.daysSinceProcessed)}處理過履歷`);
+      else out.push(`${GJD.util.withinDaysText(f.daysSinceProcessed)}處理過履歷`);
     }
     if (typeof f.postedDays === 'number' && f.postedDays > 30) {
       out.push(`刊登 ${f.postedDays} 天`);
@@ -34,7 +34,7 @@ var GJD = (function (ns) {
       !f.hasInteraction
         ? '無資料'
         : f.daysSinceProcessed !== null
-          ? GJD.util.daysAgoText(f.daysSinceProcessed)
+          ? GJD.util.withinDaysText(f.daysSinceProcessed)
           : '近 30 天內無紀錄'
     );
     push(
@@ -42,7 +42,7 @@ var GJD = (function (ns) {
       !f.hasInteraction
         ? '無資料'
         : f.daysSinceReply !== null
-          ? GJD.util.daysAgoText(f.daysSinceReply)
+          ? GJD.util.withinDaysText(f.daysSinceReply)
           : '近 90 天內無紀錄'
     );
     push('刊登(更新)日期', f.appearDateText ? `${f.appearDateText}(${f.postedDays} 天前)` : '無資料');

@@ -36,12 +36,21 @@ var GJD = (function (ns) {
   }
 
   /**
-   * 把天數講成人話。0 是今天、1 是昨天,其餘用「N 天前」。
-   * 「0 天前」和「今明兩天」這種寫法讀者看不懂,也不精確。
+   * 日曆日期用的措辭(appearDate 這種)。0 就真的是今天。
    */
   function daysAgoText(days) {
     if (days === 0) return '今天';
     if (days === 1) return '昨天';
+    return days + ' 天前';
+  }
+
+  /**
+   * 時間戳算出來的天數用的措辭(interactionRecord 這種)。
+   * 這裡的 0 是「距今未滿 24 小時」,不等於「今天」—— 昨晚十一點也會算成 0,
+   * 所以講「1 天內」才精確,「0 天前」則根本讀不通。
+   */
+  function withinDaysText(days) {
+    if (days === 0) return '1 天內';
     return days + ' 天前';
   }
 
@@ -153,6 +162,7 @@ var GJD = (function (ns) {
     daysSince,
     daysSinceTs,
     daysAgoText,
+    withinDaysText,
     jobCodeFromUrl,
     custCodeFromUrl,
     cacheGet,
