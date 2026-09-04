@@ -117,21 +117,22 @@
 
 
 <div class="card" style="border-left:4px solid #c2410c;background:#fff7ed;margin-bottom:22px">
-  <h3 style="margin-top:0">2026-09-04:104 改了資料格式,部分功能失效</h3>
+  <h3 style="margin-top:0">2026-09-04:104 改了資料格式</h3>
   <p style="margin:0 0 10px">
     104 把 <code>interactionRecord</code> 的時間戳、應徵人數與 HR 活躍度全部歸零,
-    互動紀錄改用預先算好的中文字串提供。
+    互動紀錄改用預先算好的中文字串提供。v1.6.0 起已全數對應:
   </p>
   <ul style="margin:0 0 10px;padding-left:20px">
-    <li>✅ <strong>處理履歷與回覆的時間仍可正常顯示</strong>(v1.5.0 起改讀新格式)</li>
-    <li>❌ <strong>精確應徵人數拿不到了</strong>,改顯示「無法取得」</li>
-    <li>❌ <strong>HR 活躍度拿不到了</strong>,不再計分</li>
-    <li>❌ <strong>「✦ 機會」徽章暫時不會出現</strong>(它需要應徵人數)</li>
+    <li>✅ <strong>處理履歷與回覆的時間</strong>照常顯示(改讀新的字串格式)</li>
+    <li>✅ <strong>應徵人數</strong>改為級距(0~5 / 6~10 / 11~30 / 30 人以上),
+        與 104 自己頁面上顯示的實測 66 筆完全一致。精確人數拿不到了,級距還在</li>
+    <li>✅ <strong>「✦ 機會」徽章</strong>照常運作(門檻改用最低級距)</li>
+    <li>❌ <strong>HR 活躍度</strong>沒有替代來源,不再顯示也不再計分</li>
     <li>⚠️ 回覆的時間窗從 90 天縮成 <strong>30 天</strong></li>
   </ul>
   <p class="note" style="margin:0">
     進度見 <a href="https://github.com/fansia/104-ghost-job-detector/issues/14">issue #14</a>。
-    下面的截圖拍攝於改版前,應徵人數與 HR 活躍度兩列目前會顯示「無法取得 / 無資料」。
+    下面的截圖拍攝於改版前,「應徵人數」該列現在會顯示級距,「HR 活躍度」會顯示「無資料」。
   </p>
 </div>
 
