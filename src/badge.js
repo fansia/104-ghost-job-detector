@@ -29,9 +29,9 @@ var GJD = (function (ns) {
     if (typeof f.applyCnt === 'number') out.push(`${f.applyCnt} 人應徵`);
     else if (f.applyRangeText) out.push(`${f.applyRangeText}應徵`);
     const list = out.slice(0, 3);
-    // 置頂推薦排在最前面,而且不佔那三個事實的位置 —— 它要回答的是
+    // 104 置頂職缺排在最前面,而且不佔那三個事實的位置 —— 它要回答的是
     // 「這張卡片為什麼會出現在這裡」,跟其他三項不是同一種資訊。
-    if (f.promoted) list.unshift('置頂推薦');
+    if (f.promoted) list.unshift('104置頂職缺');
     return list;
   }
 
@@ -47,9 +47,9 @@ var GJD = (function (ns) {
       typeof f.hrBehaviorPR === 'number'
         ? `PR ${Math.round(f.hrBehaviorPR * 100)}(104 內部指標)`
         : f.promoted
-          ? // 置頂推薦查不到精確值(實測 100% 撈不到),分數少了最重的一項,要講明
+          ? // 104 置頂職缺查不到精確值(實測 100% 撈不到),分數少了最重的一項,要講明
             (f.hrActive === true ? '積極徵才中(104 標準:活躍度前 30%)' : '無精確數值') +
-            ' — 置頂推薦職缺,分數未計入此項'
+            ' — 104置頂職缺,分數未計入此項'
           : f.hrActive === true
             ? '積極徵才中(104 標準:活躍度前 30%)'
             : f.hrActive === false
