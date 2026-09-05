@@ -206,7 +206,15 @@ var GJD = (function (ns) {
   }
 
   /** 把各來源的原始資料整理成 scoreJob 需要的事實集合 */
-  function buildFacts({ searchRow, companyEntry, companyTotal, applyCnt, history, jobDetail }) {
+  function buildFacts({
+    searchRow,
+    companyEntry,
+    companyTotal,
+    applyCnt,
+    history,
+    jobDetail,
+    hrPRLookup,
+  }) {
     const src = searchRow || {};
     const ce = companyEntry || {};
     // 互動紀錄三個來源都可能有:公司職缺 API、搜尋結果列、職缺內頁
@@ -231,7 +239,8 @@ var GJD = (function (ns) {
     const appearRaw = src.appearDate || (jobDetail && jobDetail.appearDate) || ce.appearDate;
     const appearDate = u.parseAppearDate(appearRaw);
 
-    const hrPRRaw =
+    // 搜尋列 / 公司職缺 API / 職缺內頁這三個來源的 PR
+    const inlinePR =
       typeof src.hrBehaviorPR === 'number'
         ? src.hrBehaviorPR
         : typeof ce.hrBehaviorPR === 'number'
@@ -239,10 +248,15 @@ var GJD = (function (ns) {
           : jobDetail && typeof jobDetail.hrBehaviorPR === 'number'
             ? jobDetail.hrBehaviorPR
             : null;
-    // PR 0 代表「贏過 0% 的公司」,是最重的一項扣分(+30)。104 改版後這個欄位
-    // 恆為 0,把「沒給資料」當成「墊底」會冤枉每一個職缺 —— 真的墊底的是極少數,
-    // 誤判的代價卻是全部,所以 0 一律視為無資料。
-    const hrPR = hrPRRaw === 0 ? null : hrPRRaw;
+
+    /* PR 0 代表「贏過 0% 的公司」,是最重的一項扣分(+30)。上面那三個端點在 104
+     * 2026-09 改版後恆為 0,把「沒給資料」當成「墊底」會冤枉每一個職缺 ——
+     * 真的墊底的是極少數,誤判的代價卻是全部,所以那邊來的 0 一律視為無資料。
+     *
+     * hrPRLookup 則是從相似職缺清單反查回來的(見 api.js 的 lookupHrPR),那裡的值
+     * 是 104 原樣下發的,0 就真的是墊底,不能跟著抹掉。所以它優先,而且不做 0 的轉換。
+     */
+    const hrPR = typeof hrPRLookup === 'number' ? hrPRLookup : inlinePR === 0 ? null : inlinePR;
 
     /* hasHrBehavior:PR 歸零後唯一還活著的活躍度訊號。
      *
