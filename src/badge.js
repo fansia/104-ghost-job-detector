@@ -100,73 +100,6 @@ var GJD = (function (ns) {
     return el;
   }
 
-  /* ---------- 商店評價邀請 ----------
-   * 只在使用者已經用順手、而且正在展開說明時出現一次(門檻見 util.js)。
-   *
-   * 兩件刻意不做的事:
-   * 1. 不指定星數。Chrome 商店的政策禁止操縱評分,文案只能請人「留下評價」。
-   * 2. 不做評價分流(先問喜不喜歡、喜歡才帶去商店)。挑「時機」可以,篩「對象」不行。
-   */
-
-  const REVIEW_URL =
-    'https://chromewebstore.google.com/detail/ollabfbopbnckocijfnahjeaoalbnbej/reviews';
-
-  let askShownThisPage = false;
-
-  function buildReviewAsk() {
-    const box = document.createElement('div');
-    box.className = 'gjd-ask';
-
-    const text = document.createElement('p');
-    text.className = 'gjd-ask__text';
-    text.textContent = '這個外掛有幫上忙嗎?到 Chrome 商店留幾句話,可以幫其他求職者找到它。';
-
-    const actions = document.createElement('p');
-    actions.className = 'gjd-ask__actions';
-
-    // 104 的職缺卡片本身可能是連結,點任何地方都可能導航 —— 一律擋掉冒泡
-    const go = document.createElement('a');
-    go.className = 'gjd-ask__go';
-    go.href = REVIEW_URL;
-    go.target = '_blank';
-    go.rel = 'noopener noreferrer';
-    go.textContent = '前往評價';
-    go.addEventListener('click', (e) => {
-      e.stopPropagation();
-      GJD.util.markReview('clicked');
-      box.remove();
-    });
-
-    const no = document.createElement('button');
-    no.type = 'button';
-    no.className = 'gjd-ask__no';
-    no.textContent = '不用了';
-    no.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      GJD.util.markReview('dismissed');
-      box.remove();
-    });
-
-    actions.append(go, no);
-    box.append(text, actions);
-    return box;
-  }
-
-  /** 展開說明時呼叫:記一次展開,必要時附上評價邀請。 */
-  async function maybeAskForReview(detail) {
-    try {
-      await GJD.util.noteExpand();
-      if (askShownThisPage) return;
-      if (!(await GJD.util.shouldAskReview())) return;
-      if (detail.hidden) return; // 使用者已經收回去了,不要事後才冒出來
-      askShownThisPage = true;
-      detail.append(buildReviewAsk());
-    } catch (e) {
-      /* 邀請只是加分項,壞掉不能影響徽章本身 */
-    }
-  }
-
   /** 建立(或更新)一張卡片的徽章元素 */
   function render(facts) {
     const wrap = document.createElement('div');
@@ -221,7 +154,6 @@ var GJD = (function (ns) {
       e.stopPropagation();
       detail.hidden = !detail.hidden;
       caret.textContent = detail.hidden ? '▾' : '▴';
-      if (!detail.hidden) maybeAskForReview(detail);
     });
 
     return wrap;

@@ -39,16 +39,6 @@ clearEl.addEventListener('click', async () => {
   const box = await chrome.storage.local.get(null);
   const keys = Object.keys(box).filter((k) => k !== 'gjd:enabled');
   await chrome.storage.local.remove(keys);
-
-  // 計數歸零,但保留使用者對商店評價邀請的回應。
-  // 清除紀錄的人要的是「把資料清掉」,不是「請再問我一次」——
-  // 按過「不用了」之後又被問,比從來沒問過更糟。
-  const prev = box['gjd:stats'];
-  if (prev && prev.review) {
-    await chrome.storage.local.set({
-      'gjd:stats': { installedAt: prev.installedAt || Date.now(), jobs: 0, expands: 0, days: [], review: prev.review },
-    });
-  }
   refresh();
 });
 
