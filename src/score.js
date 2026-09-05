@@ -333,6 +333,11 @@ var GJD = (function (ns) {
       applyType: analysisType,
       applyRangeText: applyRangeText(analysisType),
       openJobs: typeof companyTotal === 'number' ? companyTotal : null,
+      /* 置頂推薦(搜尋 API 的 jobType 1,連結帶 jobsource=hotjob_chr_exp)。
+       * 這種職缺跟搜尋關鍵字沒什麼關係,而且 HR 活躍度反查實測 100% 撈不到
+       * (三頁 6 筆無一例外),等於少了評分裡最重的一項。分數會因此偏低,
+       * 看起來像「正常」,所以必須在徽章上講明白這是推薦位、資料不完整。 */
+      promoted: !!(src && src.jobType === 1),
       repostCount: history ? history.repostCount || 0 : 0,
       firstSeen: history ? history.firstSeen : null,
       salaryUndisclosed: src.salaryLow === 0 && src.salaryHigh === 0,

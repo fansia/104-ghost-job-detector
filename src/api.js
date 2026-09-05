@@ -381,6 +381,18 @@ var GJD = (function (ns) {
 
   const prInFlight = new Map();
 
+  /* 反查彼此排隊,不併發。
+   *
+   * 每查一個職缺就會把 50 筆別的職缺的 PR 灌進快取,排在後面的常常等一下就不必
+   * 自己查了。併發跑則是所有人同時檢查快取 —— 那個時點誰的資料都還沒回來,
+   * 快取等於完全沒作用:實測日誌「本輪 21 個職缺 · 相似職缺 38 次請求」,
+   * 而同一輪的 PR 快取命中率是 0%。
+   *
+   * 排隊會讓最後一張卡片等比較久,所以呼叫端(content.js)只對進入視口的卡片
+   * 發動反查,一次就是看得見的那幾張。
+   */
+  let prChain = Promise.resolve();
+
   /** 反查單一職缺的 HR 活躍度百分位,查不到回 null */
   function lookupHrPR(jobCode) {
     if (!jobCode) return Promise.resolve(null);
@@ -394,9 +406,21 @@ var GJD = (function (ns) {
     const running = prInFlight.get(jobCode);
     if (running) return running;
 
-    const p = doLookupHrPR(jobCode)
+    const p = prChain
+      .then(() => {
+        // 排到自己了再看一次快取:前面那幾筆的清單可能已經把這個職缺灌進來了
+        const again = prGet(jobCode);
+        if (again !== null) {
+          stats.prCacheHit++;
+          return again;
+        }
+        if (prMissed(jobCode)) return null;
+        return doLookupHrPR(jobCode);
+      })
       .catch(() => null)
       .finally(() => prInFlight.delete(jobCode));
+
+    prChain = p.catch(() => {});
     prInFlight.set(jobCode, p);
     return p;
   }
