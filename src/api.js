@@ -31,7 +31,7 @@ var GJD = (function (ns) {
    */
   const stats = {
     searchPages: 0, // 搜尋 API 實際打出去的頁數
-    searchRows: 0, // 這輪拿到的職缺筆數
+    searchRows: 0, // 搜尋 API 這輪回傳的職缺筆數(一次 21~22 筆,跟分析了幾張卡片無關)
     companyReq: 0, // 公司相關請求(開缺總數 + 公司頁的職缺清單)
     applyReq: 0, // 應徵人數
     similarReq: 0, // 相似職缺清單:真的打出去的
@@ -464,6 +464,7 @@ var GJD = (function (ns) {
   function takeStats() {
     const out = Object.assign({}, stats);
     for (const k of Object.keys(stats)) stats[k] = 0;
+    out.prPending = prInFlight.size; // 還在排隊等反查的職缺
     out.prCacheSize = 0;
     try {
       for (const k of Object.keys(sessionStorage)) {
