@@ -1,4 +1,4 @@
-/* 主流程:偵測頁面類型 → 取資料 → 算分 → 注入徽章。 */
+/* 主流程:偵測頁面類型 → 取資料 → 整理成事實 → 注入徽章。 */
 (function () {
   const { util: u, api, score, badge } = GJD;
 
@@ -126,7 +126,7 @@
       history,
       jobDetail,
     });
-    return { facts, result: score.scoreJob(facts) };
+    return facts;
   }
 
   /* ---------- 搜尋結果頁 ---------- */
@@ -195,18 +195,20 @@
       loading.remove();
       return;
     }
-    if (!row) {
-      loading.replaceWith(badge.renderError('找不到這個職缺的資料'));
-      return;
-    }
-
     try {
-      const { facts, result } = await analyse(row, null);
+      /* 對不上搜尋結果時走職缺內頁 API。
+       *
+       * decorateCard 只認外掛自己重打的那份搜尋結果,而置頂職缺不隨關鍵字走 ——
+       * 重打一次換了別的幾筆,那兩三張卡就永遠對不上。卡片連結裡有 base36 代碼,
+       * 職缺內頁 API 自備 interactionRecord 與 analysisType,
+       * 跟推薦頁同一條路,不必為此多維護一套資料來源。
+       */
+      const facts = row ? await analyse(row, null) : await factsFromCardLink(card);
       if (card.dataset.gjdFor !== jobNo || !loading.isConnected) {
         loading.remove();
         return;
       }
-      loading.replaceWith(badge.render(facts, result));
+      loading.replaceWith(facts ? badge.render(facts) : badge.renderError('找不到這個職缺的資料'));
     } catch (e) {
       loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
     }
@@ -244,12 +246,12 @@
 
     try {
       // 職缺本身的資料來自公司 API,應徵人數由應徵分析端點補
-      const { facts, result } = await analyse({ jobCode, custCode, custName }, null);
+      const facts = await analyse({ jobCode, custCode, custName }, null);
       if (card.dataset.gjdFor !== jobCode || !loading.isConnected) {
         loading.remove();
         return;
       }
-      loading.replaceWith(badge.render(facts, result));
+      loading.replaceWith(badge.render(facts));
     } catch (e) {
       loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
     }
@@ -279,11 +281,23 @@
       custName: detail.custName,
       custCode: detail.custCode,
       appearDate: detail.appearDate,
-      hrBehaviorPR: detail.hrBehaviorPR,
-      hasHrBehavior: detail.hasHrBehavior,
       analysisType: detail.analysisType,
     };
     return analyse(pseudoRow, detail);
+  }
+
+  /** 只有 base36 代碼可用時的入口:推薦頁、搜尋頁置頂缺共用 */
+  async function factsFromJobCode(jobCode) {
+    const detail = await api.jobContent(jobCode);
+    if (!detail) return null;
+    return analyseByJobCode(jobCode, detail);
+  }
+
+  /** 從卡片連結取出 base36 代碼再走上面那條路;取不到代碼就回 null */
+  async function factsFromCardLink(card) {
+    const a = card.querySelector('a[href*="/job/"]');
+    const jobCode = a ? u.jobCodeFromUrl(a.getAttribute('href') || a.href) : null;
+    return jobCode ? factsFromJobCode(jobCode) : null;
   }
 
   /* ---------- AI 推薦頁 ---------- */
@@ -308,22 +322,15 @@
     anchor.after(loading);
 
     try {
-      const detail = await api.jobContent(jobCode);
+      const facts = await factsFromJobCode(jobCode);
       // 卡片可能在等待期間被回收
       if (card.dataset.gjdFor !== jobCode || !loading.isConnected) {
         loading.remove();
         return;
       }
-      if (!detail) {
-        loading.replaceWith(badge.renderError('無法取得這個職缺的資料'));
-        return;
-      }
-      const { facts, result } = await analyseByJobCode(jobCode, detail);
-      if (card.dataset.gjdFor !== jobCode || !loading.isConnected) {
-        loading.remove();
-        return;
-      }
-      loading.replaceWith(badge.render(facts, result));
+      loading.replaceWith(
+        facts ? badge.render(facts) : badge.renderError('無法取得這個職缺的資料')
+      );
     } catch (e) {
       loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
     }
@@ -341,7 +348,12 @@
     const jobCode = u.jobCodeFromUrl(location.pathname);
     if (!jobCode) return;
 
-    const header = document.querySelector('.job-header__title') || document.querySelector('.job-header');
+    /* 104 改版過標題容器,新舊版都要認:舊版 .job-header,改版後 .jobmobile-header。
+     * 順序是「越精確的越前面」,任何一個對上就掛得住。 */
+    const header =
+      document.querySelector('.job-header__title') ||
+      document.querySelector('.job-header') ||
+      document.querySelector('.jobmobile-header');
     if (!header || header.dataset.gjdFor === jobCode) return;
     header.dataset.gjdFor = jobCode;
     const old = document.querySelector('.gjd-badge--page');
@@ -355,8 +367,8 @@
       return;
     }
 
-    const { facts, result } = await analyseByJobCode(jobCode, detail);
-    const el = badge.render(facts, result);
+    const facts = await analyseByJobCode(jobCode, detail);
+    const el = badge.render(facts);
     el.classList.add('gjd-badge--page');
     header.append(el);
   }

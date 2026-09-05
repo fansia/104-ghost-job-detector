@@ -104,13 +104,13 @@
   footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border);
     color: var(--muted); font-size: 14px; }
 
-  /* 停用公告固定為淺底深字:它是全頁最重要的訊息,不隨主題浮動。
-     底色寫死就必須連文字色一起寫死,只固定一半會在深色主題下變成看不見。 */
-  .gjd-notice, .gjd-notice p, .gjd-notice li { color: #4c1d1d; }
-  .gjd-notice h2 { color: #991b1b; }
-  .gjd-notice strong { color: #7f1d1d; }
-  .gjd-notice .note { color: #78504f; }
-  .gjd-notice a { color: #991b1b; }
+  /* 改版公告固定為淺底深字:底色寫死就必須連文字色一起寫死,
+     只固定一半會在深色主題下變成看不見。 */
+  .gjd-notice, .gjd-notice p, .gjd-notice li { color: #1e293b; }
+  .gjd-notice h2 { color: #1d4ed8; }
+  .gjd-notice strong { color: #1e3a8a; }
+  .gjd-notice .note { color: #52607a; }
+  .gjd-notice a { color: #1d4ed8; }
 </style>
 </head>
 <body>
@@ -119,42 +119,32 @@
 <header>
   <img class="mark" src="icon256.png" alt="" />
   <h1>幽靈職缺偵測器</h1>
-  <p class="tagline">在 104 人力銀行的職缺上,直接顯示 HR 到底有沒有在處理履歷。<br /><strong>已停止建議使用(2026-09-04)</strong></p>
+  <p class="tagline">在 104 人力銀行的職缺上,把 104 手上有、但頁面上不顯示的那半邊數據直接印出來。</p>
   <span class="unofficial">第三方獨立開發,非 104 人力銀行官方產品</span>
 </header>
 
 
-<div class="card gjd-notice" style="border-left:5px solid #991b1b;background:#fef2f2;color:#4c1d1d;margin-bottom:26px">
-  <h2 style="margin:0 0 12px;font-size:22px;color:#991b1b">這個外掛已經沒有存在的必要,請不要再安裝</h2>
+<div class="card gjd-notice" style="border-left:5px solid #1d4ed8;background:#eff4ff;color:#1e293b;margin-bottom:26px">
+  <h2 style="margin:0 0 12px;font-size:22px;color:#1d4ed8">2026-09 的改版與調整</h2>
 
   <p style="margin:0 0 12px">
-    <strong>2026-09-04,104 調整了資料格式。</strong>原本能取得的三項資訊 ——
-    HR 上次處理履歷的精確時間、應徵人數的精確數字、HR 活躍度百分位 —— 都不再提供。
-  </p>
-
-  <p style="margin:0 0 12px">
-    這個外掛的用途,是把 104 資料庫裡有、但頁面上不顯示的那一半補出來。
-    改版之後,我們能拿到的幾乎就是 104 已經寫在頁面上的東西:
-    同樣的「N 天內處理過履歷」、同樣的應徵人數級距。
-    <strong>沒有額外資訊,就沒有安裝它的理由。</strong>
-  </p>
-
-  <p style="margin:0 0 12px">
-    差異還剩什麼,也講清楚:104 只在「有紀錄」時顯示那一行,沒有紀錄時整行不顯示,
-    本外掛仍會標出「30 天內無處理紀錄」。但只為了這一點而多裝一個擴充功能,不划算。
+    <strong>2026-09-04,104 調整了資料格式</strong>,三項資訊同時消失:HR 上次處理履歷的精確時間戳、
+    應徵人數的精確數字、HR 活躍度百分位。當時一度判斷這個外掛已經沒有存在的必要,並發出了停用公告。
   </p>
 
   <ul style="margin:0 0 12px;padding-left:20px">
-    <li><strong>還沒安裝的:</strong>不用裝了。</li>
-    <li><strong>已經安裝的:</strong>留著或移除都可以。它不會造成任何危害,只是幫助有限。</li>
-    <li><strong>原始碼仍以 MIT 授權公開</strong>,任何人都可以接手、參考或改作。</li>
+    <li><strong>精確應徵人數救回來了。</strong>改走 104 的應徵分析端點,拿得到「6 人」而不只是「6~10 人」——
+      實測級距 1(0~5 人)佔了全部職缺的 88.9%,級距幾乎沒有分辨力。</li>
+    <li><strong>HR 活躍度不再顯示,也不再去撈。</strong>剩下的布林值只有 27% 是 true,
+      另外七成分不出中段班和墊底;要拿真正的百分位得多打四到六次請求還會靜默失效,不值得。</li>
+    <li><strong>整套評分與分級移除了。</strong>不是因為資料不夠,而是實測資料撐不住那些扣分 ——
+      理由見下方〈為什麼不評分〉。</li>
   </ul>
 
   <p class="note" style="margin:0">
     謝謝這幾天回報問題的每一位。特別是指出「無紀錄不等於從未回覆」的那位,
-    以及這次回報「明明面試過的公司卻被標成無紀錄」的那位 ——
-    兩次都是在阻止這個工具冤枉真實的公司。
-    以下內容原樣保留,作為這個專案做過什麼的紀錄。
+    以及回報「明明面試過的公司卻被標成無紀錄」的那位 —— 兩次都是在阻止這個工具冤枉真實的公司。
+    現在的版本不再對任何職缺下判斷,只把數據擺出來。
   </p>
 </div>
 
@@ -167,11 +157,10 @@
 <p>這個外掛把另一半補上。每張職缺卡片會多出一列徽章:</p>
 
 <figure class="shot">
-  <img src="screenshot.png" alt="104 職缺頁上的偵測徽章,展開後顯示 HR 活躍度、上次處理履歷、上次回覆應徵者、刊登天數、應徵人數等原始數據" />
+  <img src="screenshot.png" alt="104 職缺頁上的數據列,顯示上次處理履歷、上次回覆應徵者、應徵人數、刊登日期等原始數據" />
   <figcaption>
-    點開徽章會展開完整原始數據 ——「上次回覆是 56 天前」「11 天沒處理履歷」這些,
-    104 從頭到尾不會顯示。(圖中的「應徵人數」與「HR 活躍度」兩列拍攝於 104
-    改版前,目前已無法取得,見上方公告。)
+    數據在收合狀態就全部呈現 ——「近 30 天內無回覆紀錄」「6 人應徵」這些,
+    104 從頭到尾不會顯示,或只給一個級距。(截圖為舊版排版,新版不再有分數與分級。)
   </figcaption>
 </figure>
 
@@ -281,87 +270,84 @@
   </p>
 </div>
 
-<h2>正向訊號:值得優先投的缺</h2>
+<h2>徽章上有什麼</h2>
 
-<p>
-  風險分數只會叫你別投,所以另外加了一個綠色的「機會」徽章,三個條件同時成立才會出現:
-</p>
+<p>數據在收合狀態就全部呈現,不做摘要;點開「說明」只有文字說明與使用注意,沒有額外數據。</p>
 
 <div class="tbl-wrap">
 <table>
-  <tr><th>條件</th><th>門檻</th></tr>
-  <tr><td>目前應徵人數少</td><td>≤ 3 人</td></tr>
-  <tr><td>刊登(更新)時間新</td><td>≤ 7 天</td></tr>
-  <tr><td>HR 近期真的在看履歷</td><td>≤ 7 天內處理過</td></tr>
-  <tr><td>幾乎沒有風險訊號</td><td>分數 ≤ 9</td></tr>
+  <tr><th>項目</th><th>104 自己有顯示嗎</th></tr>
+  <tr><td>處理履歷</td><td>只顯示有紀錄的情況,無紀錄時整行消失</td></tr>
+  <tr><td>回覆應徵者</td><td>同上</td></tr>
+  <tr><td>應徵人數(精確)</td><td>只給級距(0~5 / 6~10 / 11~30 / 30 人以上)</td></tr>
+  <tr><td>刊登日期 + 距今天數</td><td>只給日期,不換算</td></tr>
+  <tr><td>重新刊登次數</td><td>完全看不到,由本外掛長期觀察累積</td></tr>
+  <tr><td>公司同時開缺數</td><td>公司頁有,職缺頁沒有</td></tr>
 </table>
 </div>
 
 <p class="note" style="margin-top:14px">
-  <strong>為什麼不能只看應徵人數。</strong>
-  實測 1,144 筆:3 人以下應徵的職缺佔了 <strong>54%</strong>,標了等於沒標;而且它們的
-  刊登天數中位數(4 天)並沒有比 11–30 人那組(3 天)新 —— 少人應徵不代表新刊登。
-  其中還有 16.6% 是「掛了三週以上還沒人投」的滯銷缺,中位數 21 天,
-  只看應徵人數會把求職者推去投這些。三個條件的交集約佔 30%。
+  只有三種視覺標示,都不是分級:<strong>綠色 ✓</strong> 是處理履歷或回覆 ≤ 7 天(好消息);
+  <strong>紅色</strong> 是刊登超過 60 天(值得多看一眼,不是「這是假缺」);
+  灰底加粗只是提醒刊登日期要換算成天數才有意義。
 </p>
 
-<h2>評分怎麼算</h2>
+<h2>為什麼不評分</h2>
+
 <p>
-  分數 0–100,由多個訊號加總而成,分級為
-  <code>0–19 正常</code> / <code>20–39 留意</code> /
-  <code>40–64 可疑</code> / <code>65+ 高風險</code>。
+  早期版本有一套 0–100 的加權評分與四級分級(正常 / 留意 / 可疑 / 高風險),後來整套移除。
+  原因是 2026-09-05 做的一次抽樣(10 個關鍵字 × 第 1/3/6/10/15 頁,1,039 個不重複職缺)
+  顯示那些扣分規則的前提站不住。
 </p>
+
+<p><strong>「掛越久越沒人管」不成立 —— 掛越久的缺,HR 反而越沒問題:</strong></p>
+
 <div class="tbl-wrap">
 <table>
-  <tr><th>訊號</th><th>分數</th></tr>
-  <tr><td><s>HR 活躍度 PR &lt; 30 / &lt; 50</s></td><td><s>+30 / +15</s>(欄位已被 104 移除,不再計分)</td></tr>
-  <tr><td>近 30 天內無處理紀錄</td><td>+30</td></tr>
-  <tr><td>超過 14 天 / 7 天沒處理履歷</td><td>+22 / +14</td></tr>
-  <tr><td>近 30 天內無 104 站內回覆紀錄</td><td><strong>不計分</strong>(僅呈現)</td></tr>
-    <tr><td>刊登超過 90 / 60 / 30 天</td><td>+18 / +12 / +6</td></tr>
-  <tr><td>50 人以上應徵但一週沒處理</td><td>+10</td></tr>
-  <tr><td>公司同時開 30 / 15 個缺以上</td><td>+10 / +5</td></tr>
-  <tr><td>觀察期間重新刊登 2 次以上</td><td>+15</td></tr>
-  <tr><td>待遇面議</td><td>+4</td></tr>
+  <tr><th>刊登</th><th>筆數</th><th>HR 七天內仍在處理履歷</th><th>30 天零動作</th></tr>
+  <tr><td>&gt; 30 天</td><td>89 (8.6%)</td><td>93.3%</td><td>0</td></tr>
+  <tr><td>&gt; 60 天</td><td>39 (3.8%)</td><td>89.7%</td><td>0</td></tr>
+  <tr><td>&gt; 90 天</td><td>15 (1.4%)</td><td>86.7%</td><td>0</td></tr>
+  <tr><td>&gt; 180 天</td><td>3 (0.3%)</td><td><strong>100%</strong></td><td>0</td></tr>
 </table>
 </div>
+
 <p class="note" style="margin-top:14px">
-  <strong>0 人應徵的職缺不套用互動訊號。</strong>
-  沒人投,就沒有履歷可處理、也沒有人可以回覆,紀錄是空的是必然,不是「已讀不回」的證據 ——
-  這時「無處理紀錄」和「無回覆紀錄」都不扣分,改顯示中性提示。刊登時長等其他訊號照算。
-</p>
-<p class="note" style="margin-top:14px">
-  <strong>分數只是排序用的摘要。</strong>
-  把真職缺誤標成假的,對求職者和公司都是傷害,所以 UI 一律同時呈現原始數據,
-  讓你自己判斷,而不是給一個武斷的結論。權重定義在
-  <a href="https://github.com/fansia/104-ghost-job-detector/blob/main/src/score.js">src/score.js</a>,
-  歡迎依實際情況調整。
+  掛超過半年的三筆,HR 全部七天內還在處理履歷。那是<strong>常年開缺</strong>
+  (養人才庫、高流動率、條件開太硬),不是幽靈職缺。
 </p>
 
-<h2>隱私</h2>
-<div class="card">
-  <p style="margin:0 0 10px"><strong>不蒐集、不上傳任何資料。</strong>開發者沒有伺服器。</p>
-  <p class="note" style="margin:0">
-    所有請求都由你的瀏覽器以同源請求直接送到 <code>www.104.com.tw</code>,不經過任何第三方。
-    資料取自 104 網頁前端自己使用的內部 JSON API —— <strong>不是</strong> 104 官方對外開放、
-    需申請金鑰的 Open API,未公開文件,也因此隨時可能改版失效。
-    <code>chrome.storage.local</code> 只存 API 快取(最長 6 小時)、職缺觀察紀錄與四個使用量計數,全部留在你的電腦上,
-    可從彈出視窗一鍵清除。完整說明見
-    <a href="https://github.com/fansia/104-ghost-job-detector/blob/main/PRIVACY.md">隱私權政策</a>。
-  </p>
-</div>
+<p class="note" style="margin-top:14px">
+  <strong>「30 天零動作」的那批也不是幽靈,是新缺:</strong>n = 34,刊登天數中位數 <strong>1 天</strong>、
+  應徵人數全部落在 0~5 人那一檔,104 自己還給其中 41% 掛了「積極徵才中」。
+  而「零動作<strong>且</strong>6 人以上應徵過」這種真正說得過去的組合,樣本裡一筆都沒有。
+  兩個訊號也幾乎不重疊(刊登 &gt; 30 天且零動作:0 筆)—— 它們是兩種不同的病,
+  加總成一個分數只會讓兩種問題長成同一個數字。
+</p>
 
-<h2>已知限制</h2>
+<p class="note" style="margin-top:14px">
+  一併移除的還有綠色的「機會」徽章:它實測掛在 <strong>33.3%</strong> 的職缺上,
+  三個缺就有一個是「機會」,等於沒說話。
+</p>
+
+<p class="note" style="margin-top:14px">
+  <strong>誤判把真職缺標成假的,對求職者和公司都是傷害。</strong>
+  憑感覺訂的門檻做不到這件事,所以現在只呈現數據,判斷交給你。程式碼在
+  <a href="https://github.com/fansia/104-ghost-job-detector/blob/main/src/score.js">src/score.js</a>。
+</p>
+
 <ul class="note">
   <li>104 沒有公開「首次刊登日期」,<code>appearDate</code> 只是最後更新日。真正的刊登時長要靠外掛長期累積觀察紀錄。</li>
-  <li>應徵人數只有搜尋 API 有,公司職缺 API 與職缺詳細頁 API 都沒有。搜尋 API 又不支援以公司過濾,
-    只能用公司名稱當關鍵字再比對公司代碼 —— 公司名稱夠特殊時能完整對上,名稱通用時只撈得到一部分,
-    對不到的職缺就不顯示應徵人數。</li>
+  <li>精確應徵人數來自 104 的應徵分析端點。該端點對不存在的職缺編號一律回 <code>200</code> +
+    <code>total: 0</code>,跟真的 0 人應徵長得一模一樣,所以要拿級距交叉驗證;
+    端點失敗時只顯示級距。</li>
   <li>HR 的「處理履歷」不一定是真人動作。104 會做系統自動配對推薦,那類動作可能也算進
     處理紀錄。實測過所有欄位,<strong>沒有任何欄位能分辨真人與系統動作</strong> ——
     看到「HR 昨天處理過履歷」時請保留一點餘地。</li>
   <li>依賴 104 未公開文件的 API,對方改版可能失效。</li>
-  <li><code>hrBehaviorPR</code> 的確切計算方式是 104 的內部邏輯,我們只知道它是活躍度百分位。</li>
+  <li>抽樣是從搜尋結果來的,而搜尋結果本身就是照符合度排序、篩過的 —— 刻意翻到第 15 頁,
+    看到的仍然只是那個關鍵字的 0.24%。正確的結論是「<strong>在你實際會看到的職缺裡</strong>
+    沒有值得標的極端案例」,不是「這種缺不存在」。</li>
 </ul>
 
 <p style="margin-top:32px">

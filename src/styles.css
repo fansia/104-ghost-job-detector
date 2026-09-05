@@ -1,43 +1,18 @@
-/* 徽章樣式。全部前綴 gjd- 避免污染 104 自己的樣式。 */
+/* 徽章樣式。全部前綴 gjd- 避免污染 104 自己的樣式。
+   不分級、不上警示色 —— 一組固定的中性配色,理由見 score.js 檔頭。 */
 
 .gjd-badge {
   margin: 6px 0 8px;
   border-radius: 6px;
-  border: 1px solid var(--gjd-line, #e2e5e9);
-  background: var(--gjd-bg, #f7f8f9);
+  border: 1px solid var(--gjd-line);
+  background: var(--gjd-bg);
   font-size: 13px;
   line-height: 1.5;
   color: #333;
   overflow: hidden;
+  --gjd-line: #e2e5e9;
+  --gjd-bg: #f7f8f9;
 }
-
-.gjd-badge--green  { --gjd-line: #cfe6d4; --gjd-bg: #f2f9f4; --gjd-accent: #2f7d43; }
-.gjd-badge--yellow { --gjd-line: #f0e2bd; --gjd-bg: #fdf8ec; --gjd-accent: #8a6b12; }
-.gjd-badge--orange { --gjd-line: #f5d7bd; --gjd-bg: #fdf3ea; --gjd-accent: #a85b16; }
-.gjd-badge--red    { --gjd-line: #f2c9c9; --gjd-bg: #fdf1f1; --gjd-accent: #b32626; }
-
-/* 正向徽章:少人應徵 + 新刊登 + HR 近期在看履歷。
-   「正常」是沒有壞消息,「機會」是有好消息 —— 只換個綠色不夠,
-   在一整頁灰白卡片裡要能一眼跳出來,所以加左側色條、加深文字、加重底色。 */
-.gjd-badge--opportunity {
-  --gjd-line: #7ec894;
-  --gjd-bg: #e8f9ee;
-  --gjd-accent: #17703a;
-  border-left: 4px solid var(--gjd-accent);
-  box-shadow: 0 1px 3px rgba(23, 112, 58, 0.16);
-}
-
-.gjd-badge--opportunity .gjd-pill {
-  letter-spacing: 0.06em;
-  padding: 2px 10px;
-}
-
-.gjd-badge--opportunity .gjd-facts {
-  color: #175c31;
-  font-weight: 500;
-}
-
-.gjd-badge--opportunity .gjd-caret { color: #4f9a6a; }
 
 .gjd-badge--loading {
   padding: 6px 10px;
@@ -53,77 +28,100 @@
   font-size: 12px;
 }
 
-.gjd-bar {
+/* 數據區:收合狀態就把全部欄位攤開,但橫向流動排版,兩行內排完 */
+.gjd-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  width: 100%;
-  padding: 6px 10px;
-  background: none;
-  border: 0;
-  text-align: left;
-  cursor: pointer;
-  font: inherit;
-  color: inherit;
+  padding: 5px 8px 6px 10px;
 }
 
-.gjd-bar:hover { background: rgba(0, 0, 0, 0.03); }
-
-.gjd-pill {
-  flex: none;
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: var(--gjd-accent);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.gjd-facts {
+.gjd-data {
   flex: 1;
   min-width: 0;
-  color: #4a4a4a;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.gjd-items {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 14px;
+  row-gap: 1px;
+}
+
+/* 標籤與值靠得夠近、item 之間隔得夠開,不必畫分隔線就讀得出來哪個配哪個 */
+.gjd-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
   white-space: nowrap;
 }
 
-.gjd-caret {
-  flex: none;
-  color: #999;
-  font-size: 11px;
+.gjd-k { color: #9096a0; font-size: 12px; }
+.gjd-v { color: #222; }
+
+/* 強調某一項:只加重量、不加顏色 —— 一上警示色就變成在下判斷了 */
+.gjd-item--em {
+  padding: 0 6px;
+  margin: 0 -2px;
+  border-radius: 4px;
+  background: #e8ebef;
 }
+
+.gjd-item--em .gjd-v { color: #111; font-weight: 600; }
+
+/* 只有正面訊號才上色:HR 七天內動過 */
+.gjd-item--good {
+  padding: 0 6px;
+  margin: 0 -2px;
+  border-radius: 4px;
+  background: #e6f4ea;
+}
+
+.gjd-item--good .gjd-k { color: #5e9873; }
+.gjd-item--good .gjd-v { color: #1e7a3c; font-weight: 600; }
+
+/* 刊登超過 60 天 */
+.gjd-item--bad {
+  padding: 0 6px;
+  margin: 0 -2px;
+  border-radius: 4px;
+  background: #fdecec;
+}
+
+.gjd-item--bad .gjd-k { color: #c08b8b; }
+.gjd-item--bad .gjd-v { color: #b32626; font-weight: 600; }
+
+/* 展開鈕:收在右上角,不另外佔一列 */
+.gjd-toggle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 2px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  color: #9096a0;
+}
+
+.gjd-toggle:hover { color: #4a4a4a; }
+
+.gjd-caret { font-size: 10px; }
 
 .gjd-detail {
-  padding: 8px 10px 10px;
+  padding: 0 10px 8px;
   border-top: 1px dashed var(--gjd-line);
+  padding-top: 7px;
 }
 
-.gjd-detail__grid {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 2px 12px;
-  margin-bottom: 8px;
-}
-
-.gjd-detail__k { color: #888; }
-.gjd-detail__v { color: #222; }
-
-.gjd-detail__reasons {
-  margin: 0 0 8px;
-  padding: 0;
-  list-style: none;
-}
-
-.gjd-reason { color: var(--gjd-accent); }
-.gjd-reason--good { color: #2f7d43; }
-.gjd-reason--info { color: #6b7280; }
-
-.gjd-detail__note {
+.gjd-notes {
   margin: 0;
-  color: #999;
+  padding-left: 1.1em;
+  color: #6b7280;
   font-size: 11px;
+  line-height: 1.6;
 }
 
 /* 職缺詳細頁的徽章給多一點空間 */

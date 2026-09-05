@@ -25,8 +25,8 @@ var GJD = (function (ns) {
   }
 
   /**
-   * 搜尋 API — 一次拿 20 筆職缺的 appearDate / analysisType / hasHrBehavior。
-   * applyCnt 與 hrBehaviorPR 兩個欄位仍在回傳裡,但 104 已把值歸零,只留著以防它改回來。
+   * 搜尋 API — 一次拿 20 筆職缺的 appearDate / analysisType / interactionRecord。
+   * 回傳裡的 hrBehaviorPR / hasHrBehavior 兩個活躍度欄位刻意不取,理由見 score.js。
    * @param {URLSearchParams} params 直接沿用使用者當前搜尋頁的查詢條件
    */
   async function searchJobs(params, page) {
@@ -48,10 +48,8 @@ var GJD = (function (ns) {
       custCode: u.custCodeFromUrl(x.link && x.link.cust),
       appearDate: x.appearDate,
       applyCnt: x.applyCnt,
-      hrBehaviorPR: x.hrBehaviorPR,
       // 104 改版後 applyCnt 恆為 0:級距看 analysisType,精確人數見 applyCount()
       analysisType: x.analysisType,
-      hasHrBehavior: x.hasHrBehavior,
       interactionRecord: x.interactionRecord || null,
       salaryLow: x.salaryLow,
       salaryHigh: x.salaryHigh,
@@ -132,9 +130,7 @@ var GJD = (function (ns) {
       if (!code) continue;
       byJobCode[code] = {
         interactionRecord: j.interactionRecord || null,
-        hrBehaviorPR: j.hrBehaviorPR,
         analysisType: j.analysisType,
-        hasHrBehavior: j.hasHrBehavior,
         appearDate: j.appearDate,
         jobName: j.jobName,
       };
@@ -212,9 +208,7 @@ var GJD = (function (ns) {
       custName: h.custName,
       custCode: u.custCodeFromUrl(h.custUrl),
       appearDate: h.appearDate,
-      hrBehaviorPR: h.hrBehaviorPR,
       analysisType: h.analysisType,
-      hasHrBehavior: h.hasHrBehavior,
       // 職缺內頁自己就帶著互動紀錄,不必再靠公司職缺 API 繞一圈去找
       interactionRecord: d.interactionRecord || h.interactionRecord || null,
       closeDate: d.closeDate,
