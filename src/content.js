@@ -57,6 +57,17 @@
     return p;
   }
 
+  // 同一間公司的開缺總數也只問一次
+  function getCompanyTotal(custCode) {
+    if (!custCode) return Promise.resolve(null);
+    const key = 'total:' + custCode;
+    let p = state.companyCache.get(key);
+    if (p) return p;
+    p = api.companyTotal(custCode).catch(() => null);
+    state.companyCache.set(key, p);
+    return p;
+  }
+
   /** 大公司職缺會超過一頁,往後翻到找到這個職缺為止 */
   async function findCompanyEntry(custCode, jobCode) {
     if (!custCode) return { entry: null, totalCount: null };
@@ -74,14 +85,35 @@
     return { entry: null, totalCount };
   }
 
+  /**
+   * 公司資料要拿多少,看呼叫端手上有沒有 interactionRecord。
+   *
+   * 搜尋 API 與職缺內頁 API 都自帶 interactionRecord,格式和公司職缺 API 的一模一樣,
+   * 那就只缺開缺總數,一次 pageSize=1 就夠。以前不論如何都往公司 API 翻頁找那一筆,
+   * 實測一頁 22 張卡片要打 36 次(鴻海翻滿 6 頁上限還是沒找到,6 次全白費),
+   * 改成看情況之後降到 22 次。
+   *
+   * 公司頁的卡片沒有搜尋列可用,那裡才需要整份 entry。
+   */
+  async function fetchCompanyFacts(custCode, jobCode, haveInteraction) {
+    if (haveInteraction) {
+      return { entry: null, totalCount: await getCompanyTotal(custCode) };
+    }
+    return findCompanyEntry(custCode, jobCode);
+  }
+
   async function analyse(searchRow, jobDetail) {
     const jobCode = (searchRow && searchRow.jobCode) || null;
     const custCode = (searchRow && searchRow.custCode) || (jobDetail && jobDetail.custCode);
+    const haveInteraction = !!(
+      (searchRow && searchRow.interactionRecord) ||
+      (jobDetail && jobDetail.interactionRecord)
+    );
 
     // 搜尋 / 公司職缺 / 職缺內頁三個 API 的 applyCnt 都被 104 歸零了,
     // 精確人數一律走應徵分析端點,每個職缺各問一次。
     const [company, history, applyCnt] = await Promise.all([
-      findCompanyEntry(custCode, jobCode),
+      fetchCompanyFacts(custCode, jobCode, haveInteraction),
       touchHistory(jobCode, searchRow && searchRow.appearDate),
       getApplyCount(jobCode),
     ]);

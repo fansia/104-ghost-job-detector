@@ -63,7 +63,41 @@ var GJD = (function (ns) {
   const COMPANY_PAGE_SIZE = 100;
 
   /**
-   * 公司職缺 API — 這裡才有 interactionRecord(HR 上次處理履歷/回覆應徵者的時間)。
+   * 公司開缺總數 — 只為了 facts.openJobs 這一個數字。
+   *
+   * totalCount 與 pageSize 無關,第一頁就會回,所以拿 pageSize=1 就夠。
+   * 實測同一家公司:pageSize=100 回傳 40,214 bytes、pageSize=1 只有 7,089 bytes,
+   * 大公司差距更大(開 1,386 個缺的公司會被拉回整整 100 筆職缺,只為讀一個數字)。
+   *
+   * 職缺本身的欄位不從這裡拿 —— 搜尋 API 與職缺內頁 API 都自帶 interactionRecord,
+   * 繞公司 API 找那一筆是白跑。只有公司頁的卡片沒有別的來源,才走 companyJobs()。
+   */
+  async function companyTotal(custCode) {
+    if (!custCode) return null;
+    const key = 'custTotal:' + custCode;
+    const cached = await u.cacheGet(key, COMPANY_TTL);
+    if (typeof cached === 'number') return cached;
+
+    const url =
+      'https://www.104.com.tw/api/companies/' +
+      encodeURIComponent(custCode) +
+      '/jobs?page=1&pageSize=1';
+
+    let json;
+    try {
+      json = await queue(() => getJson(url));
+    } catch (e) {
+      return null;
+    }
+    const total = json && json.data && json.data.totalCount;
+    if (typeof total !== 'number') return null;
+    await u.cacheSet(key, total);
+    return total;
+  }
+
+  /**
+   * 公司職缺 API — 逐筆職缺的 interactionRecord 等欄位。
+   * 只有公司頁在用:那裡的卡片除了這個 API 之外沒有別的資料來源。
    * 大公司可能有數百個職缺,所以要分頁取;呼叫端負責往後翻到找到目標職缺為止。
    * 回傳 { totalCount, totalPages, byJobCode: { [base36]: {...} } }
    */
@@ -190,6 +224,6 @@ var GJD = (function (ns) {
     return out;
   }
 
-  ns.api = { searchJobs, companyJobs, applyCount, jobContent };
+  ns.api = { searchJobs, companyJobs, companyTotal, applyCount, jobContent };
   return ns;
 })(typeof GJD === 'undefined' ? {} : GJD);
