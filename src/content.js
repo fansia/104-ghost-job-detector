@@ -157,7 +157,13 @@
     }, 2000);
   }
 
-  async function analyse(searchRow, jobDetail) {
+  // 置頂推薦(jobType 1)不反查 HR 活躍度:實測三頁 6 筆全部找不到,
+  // 每筆固定燒掉 6 次請求。它們跟搜尋關鍵字本來就沒關係,略過反而讓覆蓋率上升。
+  function wantsHrPR(searchRow) {
+    return !(searchRow && searchRow.jobType === 1);
+  }
+
+  async function analyse(searchRow, jobDetail, hrPRLookup) {
     const jobCode = (searchRow && searchRow.jobCode) || null;
     const custCode = (searchRow && searchRow.custCode) || (jobDetail && jobDetail.custCode);
     const haveInteraction = !!(
@@ -165,17 +171,12 @@
       (jobDetail && jobDetail.interactionRecord)
     );
 
-    // 置頂推薦(jobType 1)不反查 HR 活躍度:實測三頁 6 筆全部找不到,
-    // 每筆固定燒掉 6 次請求。它們跟搜尋關鍵字本來就沒關係,略過反而讓覆蓋率上升。
-    const wantHrPR = !(searchRow && searchRow.jobType === 1);
-
     // 搜尋 / 公司職缺 / 職缺內頁三個 API 的 applyCnt 都被 104 歸零了,
     // 精確人數一律走應徵分析端點,每個職缺各問一次。
-    const [company, history, applyCnt, hrPRLookup] = await Promise.all([
+    const [company, history, applyCnt] = await Promise.all([
       fetchCompanyFacts(custCode, jobCode, haveInteraction),
       touchHistory(jobCode, searchRow && searchRow.appearDate),
       getApplyCount(jobCode),
-      wantHrPR ? api.lookupHrPR(jobCode) : Promise.resolve(null),
     ]);
 
     const facts = score.buildFacts({
@@ -185,10 +186,44 @@
       applyCnt,
       history,
       jobDetail,
-      hrPRLookup,
+      hrPRLookup: typeof hrPRLookup === 'number' ? hrPRLookup : null,
     });
     scheduleStatsLog();
     return { facts, result: score.scoreJob(facts) };
+  }
+
+  /**
+   * 先用手上的資料把徽章畫出來,HR 活躍度晚一步到了再換掉。
+   *
+   * 反查是排隊進行的,一個職缺最多六次請求。如果等它回來才畫徽章,使用者往下捲的
+   * 時候會一直看到「分析中」—— 實測捲動速度約每秒 1.3 個職缺,而反查一個職缺
+   * 要一到兩秒,等於永遠追不上。基礎資料(應徵人數、互動紀錄、刊登日、開缺數)
+   * 只要兩次請求,先畫出來,PR 回來再重畫一次。
+   *
+   * 重畫會換掉整個徽章元素,所以要把展開狀態帶過去,否則使用者正在看的數據表
+   * 會突然收合。
+   */
+  async function decorateWithLateHrPR({ card, key, loading, searchRow, jobDetail, jobCode }) {
+    const alive = () => card.dataset.gjdFor === key;
+
+    const first = await analyse(searchRow, jobDetail, null);
+    if (!alive() || !loading.isConnected) {
+      loading.remove();
+      return;
+    }
+    let current = badge.render(first.facts, first.result);
+    loading.replaceWith(current);
+
+    if (!jobCode || !wantsHrPR(searchRow)) return;
+
+    const pr = await api.lookupHrPR(jobCode);
+    if (typeof pr !== 'number' || !alive() || !current.isConnected) return;
+
+    const second = await analyse(searchRow, jobDetail, pr);
+    if (!alive() || !current.isConnected) return;
+    const next = badge.render(second.facts, second.result);
+    badge.setOpen(next, badge.isOpen(current));
+    current.replaceWith(next);
   }
 
   /* ---------- 搜尋結果頁 ---------- */
@@ -263,22 +298,65 @@
     }
 
     try {
-      const { facts, result } = await analyse(row, null);
-      if (card.dataset.gjdFor !== jobNo || !loading.isConnected) {
-        loading.remove();
-        return;
-      }
-      loading.replaceWith(badge.render(facts, result));
+      await decorateWithLateHrPR({
+        card,
+        key: jobNo,
+        loading,
+        searchRow: row,
+        jobDetail: null,
+        jobCode: row.jobCode,
+      });
     } catch (e) {
-      loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
+      if (loading.isConnected) {
+        loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
+      }
+    }
+  }
+
+  /* ---------- 捲到哪、算到哪 ----------
+   *
+   * 104 的搜尋頁一次就把整頁二十幾張卡片全放進 DOM,不是虛擬捲動。原本掃到就分析,
+   * 首屏等於同時送出七八十次請求 —— 實測日誌是「本輪 21 個職缺 · 送出 48 次請求」,
+   * 而且那一輪 PR 快取一筆都沒命中:大家同時起跑,誰也等不到別人灌進來的資料。
+   *
+   * 改成進入視口(含 300px 預備距離)才排隊。首屏只算看得見的那幾張,往下捲時
+   * 後面的卡片還能吃到前面已經灌好的快取。
+   */
+  const VIEWPORT_MARGIN = '1200px 0px';
+  let viewportObserver = null;
+  const viewportPending = new WeakMap();
+
+  function observeInViewport(cards, decorate) {
+    if (!viewportObserver) {
+      viewportObserver = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            viewportObserver.unobserve(e.target);
+            const fn = viewportPending.get(e.target);
+            if (fn) {
+              viewportPending.delete(e.target);
+              fn();
+            }
+          }
+        },
+        { rootMargin: VIEWPORT_MARGIN }
+      );
+    }
+    for (const card of cards) {
+      if (viewportPending.has(card)) continue; // 已經排過隊了
+      viewportPending.set(card, () => decorate(card));
+      viewportObserver.observe(card);
     }
   }
 
   function scanSearchPage() {
     if (!state.enabled) return;
-    document.querySelectorAll('.job-summary[data-job-no]').forEach((card) => {
-      decorateCard(card);
-    });
+    const cards = [...document.querySelectorAll('.job-summary[data-job-no]')].filter(
+      // 已經畫好而且還是同一個職缺的卡片不必再排;被回收換成別的職缺時會重新進來
+      (card) => card.dataset.gjdFor !== card.getAttribute('data-job-no')
+    );
+    observeInViewport(cards, decorateCard);
   }
 
   /* ---------- 公司頁的「工作機會」列表 ---------- */
@@ -306,14 +384,18 @@
 
     try {
       // 職缺本身的資料來自公司 API,應徵人數由應徵分析端點補
-      const { facts, result } = await analyse({ jobCode, custCode, custName }, null);
-      if (card.dataset.gjdFor !== jobCode || !loading.isConnected) {
-        loading.remove();
-        return;
-      }
-      loading.replaceWith(badge.render(facts, result));
+      await decorateWithLateHrPR({
+        card,
+        key: jobCode,
+        loading,
+        searchRow: { jobCode, custCode, custName },
+        jobDetail: null,
+        jobCode,
+      });
     } catch (e) {
-      loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
+      if (loading.isConnected) {
+        loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
+      }
     }
   }
 
@@ -323,9 +405,10 @@
     if (!custCode) return;
     const h1 = document.querySelector('h1');
     const custName = h1 ? h1.textContent.trim() : null;
-    document.querySelectorAll('.job-list-container--cprofile').forEach((card) => {
-      decorateCompanyCard(card, custCode, custName);
-    });
+    const cards = [...document.querySelectorAll('.job-list-container--cprofile')].filter(
+      (card) => !card.dataset.gjdFor || card.dataset.gjdFor !== companyCardJobCode(card)
+    );
+    observeInViewport(cards, (card) => decorateCompanyCard(card, custCode, custName));
   }
 
   /**
@@ -334,8 +417,8 @@
    * analyse() 會用 custCode 去公司 API 拿互動紀錄,再由應徵分析端點補應徵人數。
    * 職缺內頁與推薦頁共用這條路。
    */
-  async function analyseByJobCode(jobCode, detail) {
-    const pseudoRow = {
+  function pseudoRowOf(jobCode, detail) {
+    return {
       jobCode,
       jobName: detail.jobName,
       custName: detail.custName,
@@ -345,7 +428,10 @@
       hasHrBehavior: detail.hasHrBehavior,
       analysisType: detail.analysisType,
     };
-    return analyse(pseudoRow, detail);
+  }
+
+  async function analyseByJobCode(jobCode, detail, hrPRLookup) {
+    return analyse(pseudoRowOf(jobCode, detail), detail, hrPRLookup);
   }
 
   /* ---------- AI 推薦頁 ---------- */
@@ -380,20 +466,24 @@
         loading.replaceWith(badge.renderError('無法取得這個職缺的資料'));
         return;
       }
-      const { facts, result } = await analyseByJobCode(jobCode, detail);
-      if (card.dataset.gjdFor !== jobCode || !loading.isConnected) {
-        loading.remove();
-        return;
-      }
-      loading.replaceWith(badge.render(facts, result));
+      await decorateWithLateHrPR({
+        card,
+        key: jobCode,
+        loading,
+        searchRow: pseudoRowOf(jobCode, detail),
+        jobDetail: detail,
+        jobCode,
+      });
     } catch (e) {
-      loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
+      if (loading.isConnected) {
+        loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
+      }
     }
   }
 
   function scanRecommendPage() {
     if (!state.enabled) return;
-    document.querySelectorAll('.job-summary[data-job-no]').forEach(decorateRecommendCard);
+    observeInViewport([...document.querySelectorAll('.job-summary[data-job-no]')], decorateRecommendCard);
   }
 
   /* ---------- 職缺詳細頁 ---------- */
@@ -417,10 +507,20 @@
       return;
     }
 
-    const { facts, result } = await analyseByJobCode(jobCode, detail);
-    const el = badge.render(facts, result);
+    // 內頁只有一個職缺,但反查仍要一兩秒,一樣先畫基礎徽章再補 HR 活躍度
+    const first = await analyseByJobCode(jobCode, detail, null);
+    let el = badge.render(first.facts, first.result);
     el.classList.add('gjd-badge--page');
     header.append(el);
+
+    const pr = await api.lookupHrPR(jobCode);
+    if (typeof pr !== 'number' || header.dataset.gjdFor !== jobCode || !el.isConnected) return;
+    const second = await analyseByJobCode(jobCode, detail, pr);
+    if (header.dataset.gjdFor !== jobCode || !el.isConnected) return;
+    const next = badge.render(second.facts, second.result);
+    next.classList.add('gjd-badge--page');
+    badge.setOpen(next, badge.isOpen(el));
+    el.replaceWith(next);
   }
 
   /* ---------- 啟動 ---------- */

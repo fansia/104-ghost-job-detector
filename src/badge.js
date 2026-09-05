@@ -13,7 +13,11 @@ var GJD = (function (ns) {
     if (f.hasInteraction && !quiet) {
       // null 是「時間窗內沒有」,不是「從來沒有」—— 措辭必須守住這個差別
       if (f.daysSinceReply === null) out.push('30 天內無回覆紀錄');
+      // 時間戳格式才可能大於 30;2026-09 之後的描述字串格式一律落在 30 天窗內
       else if (f.daysSinceReply > 30) out.push(`上次回覆 ${f.daysSinceReply} 天前`);
+      // 有回覆也要講。原本只在「無紀錄」時出現一行,等於摘要永遠只報壞消息:
+      // 明明四天前才回覆過應徵者,摘要卻一個字都不提。
+      else out.push(`${GJD.util.withinDaysText(f.daysSinceReply)}回覆過應徵者`);
 
       if (f.daysSinceProcessed === null) out.push('30 天內無處理紀錄');
       else if (f.daysSinceProcessed > 7) out.push(`${f.daysSinceProcessed} 天沒處理履歷`);
@@ -24,7 +28,11 @@ var GJD = (function (ns) {
     }
     if (typeof f.applyCnt === 'number') out.push(`${f.applyCnt} 人應徵`);
     else if (f.applyRangeText) out.push(`${f.applyRangeText}應徵`);
-    return out.slice(0, 3);
+    const list = out.slice(0, 3);
+    // 置頂推薦排在最前面,而且不佔那三個事實的位置 —— 它要回答的是
+    // 「這張卡片為什麼會出現在這裡」,跟其他三項不是同一種資訊。
+    if (f.promoted) list.unshift('置頂推薦');
+    return list;
   }
 
   function buildDetail(f, result) {
@@ -38,11 +46,15 @@ var GJD = (function (ns) {
       'HR 活躍度',
       typeof f.hrBehaviorPR === 'number'
         ? `PR ${Math.round(f.hrBehaviorPR * 100)}(104 內部指標)`
-        : f.hrActive === true
-          ? '積極徵才中(104 標準:活躍度前 30%)'
-          : f.hrActive === false
-            ? '未達 104 的「積極徵才中」標準'
-            : '無資料'
+        : f.promoted
+          ? // 置頂推薦查不到精確值(實測 100% 撈不到),分數少了最重的一項,要講明
+            (f.hrActive === true ? '積極徵才中(104 標準:活躍度前 30%)' : '無精確數值') +
+            ' — 置頂推薦職缺,分數未計入此項'
+          : f.hrActive === true
+            ? '積極徵才中(104 標準:活躍度前 30%)'
+            : f.hrActive === false
+              ? '未達 104 的「積極徵才中」標準'
+              : '無資料'
     );
     push(
       '上次處理履歷',
@@ -264,6 +276,22 @@ var GJD = (function (ns) {
     return wrap;
   }
 
-  ns.badge = { render, renderLoading, renderError };
+  /* HR 活躍度是晚一步才反查回來的,到了就得重畫整個徽章。這兩個小工具讓呼叫端
+   * 把展開狀態接過去 —— 否則使用者正在看的數據表會在重畫的瞬間收合。 */
+
+  function isOpen(el) {
+    const d = el && el.querySelector('.gjd-detail');
+    return !!d && !d.hidden;
+  }
+
+  function setOpen(el, open) {
+    const d = el && el.querySelector('.gjd-detail');
+    if (!d) return;
+    d.hidden = !open;
+    const caret = el.querySelector('.gjd-caret');
+    if (caret) caret.textContent = open ? '▴' : '▾';
+  }
+
+  ns.badge = { render, renderLoading, renderError, isOpen, setOpen };
   return ns;
 })(typeof GJD === 'undefined' ? {} : GJD);
