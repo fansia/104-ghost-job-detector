@@ -13,11 +13,9 @@ var GJD = (function (ns) {
     if (f.hasInteraction && !quiet) {
       // null 是「時間窗內沒有」,不是「從來沒有」—— 措辭必須守住這個差別
       if (f.daysSinceReply === null) out.push('30 天內無回覆紀錄');
-      // 時間戳格式才可能大於 30;2026-09 之後的描述字串格式一律落在 30 天窗內
       else if (f.daysSinceReply > 30) out.push(`上次回覆 ${f.daysSinceReply} 天前`);
-      // 有回覆也要講。原本只在「無紀錄」時出現一行,等於摘要永遠只報壞消息:
-      // 明明四天前才回覆過應徵者,摘要卻一個字都不提。
-      else out.push(`${GJD.util.withinDaysText(f.daysSinceReply)}回覆過應徵者`);
+      // 有回覆時刻意不在摘要列出現:下面總共只有三個位置,再加一行會把應徵人數
+      // 擠掉(刊登超過 30 天的職缺就會發生)。正面的回覆紀錄留在數據表裡。
 
       if (f.daysSinceProcessed === null) out.push('30 天內無處理紀錄');
       else if (f.daysSinceProcessed > 7) out.push(`${f.daysSinceProcessed} 天沒處理履歷`);
@@ -42,19 +40,20 @@ var GJD = (function (ns) {
     // 104 停止下發 PR 數值後,只剩 hasHrBehavior 這個布林值(近似 PR >= 0.7,見 score.js)。
     // false 分不出「中段班」和「墊底」,措辭不能寫成「不活躍」。
     // 「前 30%」是隨機抽樣量到的(true 佔 27%、PR>=0.7 佔 30%),不是從門檻反推的。
+    const hrActiveText =
+      f.hrActive === true
+        ? '積極徵才中(104 標準:活躍度前 30%)'
+        : f.hrActive === false
+          ? '未達 104 的「積極徵才中」標準'
+          : '無資料';
     push(
       'HR 活躍度',
       typeof f.hrBehaviorPR === 'number'
         ? `PR ${Math.round(f.hrBehaviorPR * 100)}(104 內部指標)`
-        : f.promoted
-          ? // 104 置頂職缺查不到精確值(實測 100% 撈不到),分數少了最重的一項,要講明
-            (f.hrActive === true ? '積極徵才中(104 標準:活躍度前 30%)' : '無精確數值') +
-            ' — 104置頂職缺,分數未計入此項'
-          : f.hrActive === true
-            ? '積極徵才中(104 標準:活躍度前 30%)'
-            : f.hrActive === false
-              ? '未達 104 的「積極徵才中」標準'
-              : '無資料'
+        : // 104 置頂職缺查不到精確值(實測 100% 撈不到),分數少了最重的一項,要講明。
+          // 但 hasHrBehavior 的 true/false 是 104 明確回傳的,照樣要顯示 ——
+          // 只因為沒有精確 PR 就退回「無資料」,是把手上有的訊號丟掉。
+          hrActiveText + (f.promoted ? ' — 104置頂職缺,分數未計入此項' : '')
     );
     push(
       '上次處理履歷',

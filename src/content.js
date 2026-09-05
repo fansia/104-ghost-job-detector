@@ -516,7 +516,9 @@
       return;
     }
 
-    // 內頁只有一個職缺,但反查仍要一兩秒,一樣先畫基礎徽章再補 HR 活躍度
+    // 內頁只有一個職缺,但反查仍要一兩秒,一樣先畫基礎徽章再補 HR 活躍度。
+    // 這條路徑不經過 decorateWithLateHrPR,所以計數要自己加,否則統計會印成 0 張。
+    cardsThisRound++;
     const first = await analyseByJobCode(jobCode, detail, null);
     let el = badge.render(first.facts, first.result);
     el.classList.add('gjd-badge--page');
