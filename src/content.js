@@ -108,6 +108,7 @@
    * HR 活躍度反查一個職缺最多要打六次請求,這行 log 是判斷快取有沒有在擋的唯一依據。
    */
   let statsTimer = null;
+  let cardsThisRound = 0; // 這一輪真正送去分析的卡片數,跟搜尋 API 回傳幾筆是兩回事
   function scheduleStatsLog() {
     clearTimeout(statsTimer);
     statsTimer = setTimeout(() => {
@@ -119,14 +120,19 @@
       const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
       const similarTotal = s.similarReq + s.similarHit;
 
+      const cards = cardsThisRound;
+      cardsThisRound = 0;
+
       console.log(
-        '[幽靈職缺偵測器] 本輪 ' +
-          s.searchRows +
-          ' 個職缺 · 送出 ' +
+        '[幽靈職缺偵測器] 本輪分析 ' +
+          cards +
+          ' 張卡片 · 送出 ' +
           reqs +
           ' 次請求(搜尋 ' +
           s.searchPages +
-          ' 頁、公司 ' +
+          ' 頁/回傳 ' +
+          s.searchRows +
+          ' 筆、公司 ' +
           s.companyReq +
           '、應徵人數 ' +
           s.applyReq +
@@ -152,7 +158,9 @@
           s.storeHit +
           ' 次 · PR 快取累積 ' +
           s.prCacheSize +
-          ' 筆'
+          ' 筆 · 反查排隊中 ' +
+          s.prPending +
+          ' 個'
       );
     }, 2000);
   }
@@ -205,6 +213,7 @@
    */
   async function decorateWithLateHrPR({ card, key, loading, searchRow, jobDetail, jobCode }) {
     const alive = () => card.dataset.gjdFor === key;
+    cardsThisRound++;
 
     const first = await analyse(searchRow, jobDetail, null);
     if (!alive() || !loading.isConnected) {
