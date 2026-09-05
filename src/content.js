@@ -102,6 +102,61 @@
     return findCompanyEntry(custCode, jobCode);
   }
 
+  /* ---------- 用量統計輸出 ----------
+   * 一輪掃描裡每張卡片各自非同步完成,沒有一個明確的「這輪結束」時點,所以用閒置節流:
+   * 最後一張卡片畫完之後兩秒內沒有新動作,就把這一輪的用量印出來。
+   * HR 活躍度反查一個職缺最多要打六次請求,這行 log 是判斷快取有沒有在擋的唯一依據。
+   */
+  let statsTimer = null;
+  function scheduleStatsLog() {
+    clearTimeout(statsTimer);
+    statsTimer = setTimeout(() => {
+      const s = api.takeStats();
+      const reqs = s.searchPages + s.companyReq + s.applyReq + s.similarReq;
+      if (!reqs && !s.storeHit && !s.prCacheHit) return; // 這輪什麼都沒做就別洗版
+
+      const prTotal = s.prCacheHit + s.prFound + s.prMissed;
+      const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+      const similarTotal = s.similarReq + s.similarHit;
+
+      console.log(
+        '[幽靈職缺偵測器] 本輪 ' +
+          s.searchRows +
+          ' 個職缺 · 送出 ' +
+          reqs +
+          ' 次請求(搜尋 ' +
+          s.searchPages +
+          ' 頁、公司 ' +
+          s.companyReq +
+          '、應徵人數 ' +
+          s.applyReq +
+          '、相似職缺 ' +
+          s.similarReq +
+          ') · HR 活躍度 ' +
+          prTotal +
+          ' 筆:快取命中 ' +
+          s.prCacheHit +
+          '(' +
+          pct(s.prCacheHit, prTotal) +
+          '%)、反查到 ' +
+          s.prFound +
+          '、查不到 ' +
+          s.prMissed +
+          ' · 相似清單省下 ' +
+          s.similarHit +
+          '/' +
+          similarTotal +
+          '(' +
+          pct(s.similarHit, similarTotal) +
+          '%) · storage 命中 ' +
+          s.storeHit +
+          ' 次 · PR 快取累積 ' +
+          s.prCacheSize +
+          ' 筆'
+      );
+    }, 2000);
+  }
+
   async function analyse(searchRow, jobDetail) {
     const jobCode = (searchRow && searchRow.jobCode) || null;
     const custCode = (searchRow && searchRow.custCode) || (jobDetail && jobDetail.custCode);
@@ -110,12 +165,17 @@
       (jobDetail && jobDetail.interactionRecord)
     );
 
+    // 置頂推薦(jobType 1)不反查 HR 活躍度:實測三頁 6 筆全部找不到,
+    // 每筆固定燒掉 6 次請求。它們跟搜尋關鍵字本來就沒關係,略過反而讓覆蓋率上升。
+    const wantHrPR = !(searchRow && searchRow.jobType === 1);
+
     // 搜尋 / 公司職缺 / 職缺內頁三個 API 的 applyCnt 都被 104 歸零了,
     // 精確人數一律走應徵分析端點,每個職缺各問一次。
-    const [company, history, applyCnt] = await Promise.all([
+    const [company, history, applyCnt, hrPRLookup] = await Promise.all([
       fetchCompanyFacts(custCode, jobCode, haveInteraction),
       touchHistory(jobCode, searchRow && searchRow.appearDate),
       getApplyCount(jobCode),
+      wantHrPR ? api.lookupHrPR(jobCode) : Promise.resolve(null),
     ]);
 
     const facts = score.buildFacts({
@@ -125,7 +185,9 @@
       applyCnt,
       history,
       jobDetail,
+      hrPRLookup,
     });
+    scheduleStatsLog();
     return { facts, result: score.scoreJob(facts) };
   }
 
