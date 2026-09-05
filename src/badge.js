@@ -32,6 +32,12 @@ var GJD = (function (ns) {
     const push = (label, value) => rows.push({ label, value });
 
     push('HR 活躍度', typeof f.hrBehaviorPR === 'number' ? `PR ${Math.round(f.hrBehaviorPR * 100)}(104 內部指標)` : '無資料');
+    if (f.hrBehaviorPR == null && typeof f.companyActivityRatio === 'number') {
+      push(
+        '公司整體活躍度(替代指標)',
+        `${Math.round(f.companyActivityRatio * 100)}%(${f.companyActivitySample} 個缺中,最近 7 天內處理過履歷的比例;非 104 官方數據)`
+      );
+    }
     push(
       '上次處理履歷',
       !f.hasInteraction

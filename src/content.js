@@ -57,21 +57,25 @@
     return p;
   }
 
-  /** 大公司職缺會超過一頁,往後翻到找到這個職缺為止 */
+  /** 大公司職缺會超過一頁,往後翻到找到這個職缺為止;順便把沿途翻到的
+   *  所有職缺 entry 收集起來,給 score.buildCompanyActivity 當樣本用
+   *  (不額外多打 API,只是把已經抓到的頁面順便利用)。 */
   async function findCompanyEntry(custCode, jobCode) {
-    if (!custCode) return { entry: null, totalCount: null };
+    if (!custCode) return { entry: null, totalCount: null, entries: [] };
     let totalPages = 1;
     let totalCount = null;
+    const entries = [];
     for (let page = 1; page <= totalPages && page <= MAX_COMPANY_PAGES; page++) {
       const res = await getCompanyPage(custCode, page);
       if (!res) break;
       totalCount = res.totalCount;
       totalPages = res.totalPages || 1;
+      for (const code in res.byJobCode) entries.push(res.byJobCode[code]);
       if (jobCode && res.byJobCode[jobCode]) {
-        return { entry: res.byJobCode[jobCode], totalCount };
+        return { entry: res.byJobCode[jobCode], totalCount, entries };
       }
     }
-    return { entry: null, totalCount };
+    return { entry: null, totalCount, entries };
   }
 
   async function analyse(searchRow, jobDetail) {
@@ -91,6 +95,7 @@
     const facts = score.buildFacts({
       searchRow,
       companyEntry: company.entry,
+      companyEntries: company.entries,
       companyTotal: company.totalCount,
       applyCnt: applyCounts && jobCode ? applyCounts[jobCode] : undefined,
       history,
@@ -304,12 +309,27 @@
 
   /* ---------- 職缺詳細頁 ---------- */
 
+  // 104 於 2026 年改版後,職缺詳細頁的標題容器從 .job-header 換成 .jobmobile-header
+  // (桌機、手機共用同一套「手機優先」的元件,不再分兩套 class)。
+  // 與其押寶單一 class 名稱,不如找一定存在的 <h1> 職缺標題,往上找一層可以掛徽章的容器;
+  // 這樣不管 104 之後再怎麼改 class 命名,只要 <h1> 還在就找得到位置。
+  function findJobHeaderContainer() {
+    const known =
+      document.querySelector('.job-header__title') ||
+      document.querySelector('.job-header') ||
+      document.querySelector('.jobmobile-header');
+    if (known) return known;
+
+    const h1 = document.querySelector('h1');
+    return h1 ? h1.parentElement : null;
+  }
+
   async function decorateJobPage() {
     if (!state.enabled) return;
     const jobCode = u.jobCodeFromUrl(location.pathname);
     if (!jobCode) return;
 
-    const header = document.querySelector('.job-header__title') || document.querySelector('.job-header');
+    const header = findJobHeaderContainer();
     if (!header || header.dataset.gjdFor === jobCode) return;
     header.dataset.gjdFor = jobCode;
     const old = document.querySelector('.gjd-badge--page');

@@ -15,8 +15,53 @@ var GJD = (function (ns) {
   const applyRangeText = (t) => APPLY_RANGE[t] || null;
 
   /**
+   * 從單一 interactionRecord 算出「上次處理履歷距今幾天」,不管是舊格式(時間戳)
+   * 還是 2026-09 後的新格式(中文描述字串)。給 buildFacts 的主要職缺與下面
+   * 公司整體活躍度的彙總都共用,避免兩處各寫一次判斷邏輯而慢慢長歪。
+   */
+  function daysSinceProcessedFromRecord(ir) {
+    if (!ir) return null;
+    const descApi = 'lastProcessedResumeDesc' in ir;
+    const now = ir.nowTimestamp || Date.now() / 1000;
+    return descApi
+      ? u.parseInteractionDesc(ir.lastProcessedResumeDesc)
+      : u.daysSinceTs(ir.lastProcessedResumeAtTime, now);
+  }
+
+  // 樣本太少時,比例會被一兩個職缺的運氣放大(例如只開 2 個缺,剛好都很久沒處理,
+  // 比例就是 0%,但這不代表公司整體消極)。門檻依直覺抓,不是實測值 —— 沒有大量
+  // 標註過的資料可以驗證這個替代指標的準確度,權重刻意壓得比 hrBehaviorPR 低。
+  const COMPANY_ACTIVITY_MIN_SAMPLE = 5;
+  const COMPANY_ACTIVITY_RECENT_DAYS = 7; // 跟下面「7 天內處理過履歷」的門檻一致
+
+  /**
+   * hrBehaviorPR 是 104 自己算好的公司活躍度百分位,104 改版後這個欄位恆為 0
+   * (見下方 buildFacts,已一律視為無資料)。這裡用同一間公司「所有職缺」的
+   * interactionRecord 自己算一個土砲版替代指標:開的缺裡,有多少比例最近
+   * N 天內處理過履歷。這是我們自己算的推論值,不是 104 官方欄位,所以權重、
+   * 措辭都要講清楚「替代」兩個字,不能假裝跟官方指標一樣可信。
+   *
+   * @param {Array} entries 公司職缺 API 撈到的所有職缺項目(見 api.js companyJobs)
+   */
+  function buildCompanyActivity(entries) {
+    if (!Array.isArray(entries) || entries.length < COMPANY_ACTIVITY_MIN_SAMPLE) return null;
+    let withRecord = 0;
+    let recent = 0;
+    for (const e of entries) {
+      const d = daysSinceProcessedFromRecord(e && e.interactionRecord);
+      if (d === null) continue;
+      withRecord++;
+      if (d <= COMPANY_ACTIVITY_RECENT_DAYS) recent++;
+    }
+    if (withRecord < COMPANY_ACTIVITY_MIN_SAMPLE) return null; // 有紀錄的樣本也要夠多才採信
+    return { ratio: recent / withRecord, sample: withRecord };
+  }
+
+  /**
    * @param {object} f 事實集合
    *   hrBehaviorPR   0~1,104 內部的 HR 活躍度百分位
+   *   companyActivityRatio  公司開缺中,最近 7 天內處理過履歷的比例(hrBehaviorPR 的替代指標)
+   *   companyActivitySample 計算上面比例時用到的職缺筆數
    *   daysSinceProcessed  HR 上次處理履歷距今天數(null = 近 30 天內無紀錄)
    *   daysSinceReply      公司上次透過 104 回覆應徵者距今天數(null = 近 30 天內無紀錄)
    *
@@ -61,6 +106,22 @@ var GJD = (function (ns) {
         reasons.push({
           points: 0,
           text: `HR 活躍度高(PR ${Math.round(f.hrBehaviorPR * 100)})`,
+          kind: 'good',
+        });
+      }
+    } else if (typeof f.companyActivityRatio === 'number') {
+      // 官方的 hrBehaviorPR 拿不到時,退而求其次用自己算的替代指標。
+      // 權重比照 hrBehaviorPR 打七折左右,因為這是推論值,不是官方直接給的分數。
+      const pct = Math.round(f.companyActivityRatio * 100);
+      const n = f.companyActivitySample;
+      if (f.companyActivityRatio < 0.2) {
+        add(20, `這家公司開的缺裡,只有 ${pct}%(${n} 筆中)最近處理過履歷(替代指標,非 104 官方數據)`);
+      } else if (f.companyActivityRatio < 0.4) {
+        add(10, `這家公司整體處理履歷比例偏低(${pct}%,樣本 ${n} 筆,替代指標)`);
+      } else if (f.companyActivityRatio >= 0.7) {
+        reasons.push({
+          points: 0,
+          text: `這家公司整體處理履歷比例高(${pct}%,樣本 ${n} 筆,替代指標)`,
           kind: 'good',
         });
       }
@@ -193,7 +254,7 @@ var GJD = (function (ns) {
   }
 
   /** 把各來源的原始資料整理成 scoreJob 需要的事實集合 */
-  function buildFacts({ searchRow, companyEntry, companyTotal, applyCnt, history, jobDetail }) {
+  function buildFacts({ searchRow, companyEntry, companyEntries, companyTotal, applyCnt, history, jobDetail }) {
     const src = searchRow || {};
     const ce = companyEntry || {};
     // 互動紀錄三個來源都可能有:公司職缺 API、搜尋結果列、職缺內頁
@@ -241,16 +302,16 @@ var GJD = (function (ns) {
             ? jobDetail.analysisType
             : null;
 
+    const companyActivity = buildCompanyActivity(companyEntries);
+
     return {
       jobName: src.jobName || ce.jobName || (jobDetail && jobDetail.jobName),
       custName: src.custName || (jobDetail && jobDetail.custName),
       hrBehaviorPR: hrPR,
+      companyActivityRatio: companyActivity ? companyActivity.ratio : null,
+      companyActivitySample: companyActivity ? companyActivity.sample : null,
       hasInteraction: !!ir,
-      daysSinceProcessed: !ir
-        ? null
-        : descApi
-          ? u.parseInteractionDesc(ir.lastProcessedResumeDesc)
-          : u.daysSinceTs(ir.lastProcessedResumeAtTime, now),
+      daysSinceProcessed: daysSinceProcessedFromRecord(ir),
       daysSinceReply: !ir
         ? null
         : descApi
