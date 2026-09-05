@@ -157,7 +157,7 @@
     }, 2000);
   }
 
-  // 置頂推薦(jobType 1)不反查 HR 活躍度:實測三頁 6 筆全部找不到,
+  // 104 置頂職缺(jobType 1)不反查 HR 活躍度:實測三頁 6 筆全部找不到,
   // 每筆固定燒掉 6 次請求。它們跟搜尋關鍵字本來就沒關係,略過反而讓覆蓋率上升。
   function wantsHrPR(searchRow) {
     return !(searchRow && searchRow.jobType === 1);

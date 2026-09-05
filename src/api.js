@@ -66,7 +66,7 @@ var GJD = (function (ns) {
     const rows = (json.data || []).map((x) => ({
       jobNo: String(x.jobNo),
       jobCode: u.jobCodeFromUrl(x.link && x.link.job),
-      // jobType 1 是置頂推薦(點進去的連結帶 jobsource=hotjob_chr_exp),每頁固定 2 筆,
+      // jobType 1 是 104 置頂職缺(點進去的連結帶 jobsource=hotjob_chr_exp),每頁固定 2 筆,
       // 也就是 pagesize=20 卻回 22 筆的來源。它跟搜尋關鍵字沒什麼關係
       // (搜「數據工程師」會出「QC測試人員」),所以不為它做 HR 活躍度反查。
       jobType: x.jobType,
