@@ -1,4 +1,4 @@
-/* 主流程:偵測頁面類型 → 取資料 → 算分 → 注入徽章。 */
+/* 主流程:偵測頁面類型 → 取資料 → 整理成事實 → 注入徽章。 */
 (function () {
   const { util: u, api, score, badge } = GJD;
 
@@ -12,7 +12,7 @@
     maxPage: 0,
     exhausted: false,
     companyCache: new Map(), // "custCode:page" -> Promise<companyJobs()>
-    applyCache: new Map(), // custCode -> Promise<{ jobCode: 應徵人數 }>
+    applyCache: new Map(), // jobCode -> Promise<應徵人數>
   };
 
   /* ---------- 觀察紀錄:記下第一次看到的時間與重新刊登次數 ---------- */
@@ -24,7 +24,6 @@
     const today = new Date().toISOString().slice(0, 10);
     if (!h) {
       h = { firstSeen: today, lastAppear: appearDate || null, repostCount: 0 };
-      u.noteNewJob(); // 只在真的第一次看到時計數,所以是不重複的職缺數
     } else if (appearDate && h.lastAppear && appearDate !== h.lastAppear) {
       h.repostCount = (h.repostCount || 0) + 1;
       h.lastAppear = appearDate;
@@ -47,13 +46,24 @@
     return p;
   }
 
-  // 公司頁上十幾張卡片會同時要應徵人數,共用同一個 Promise 才不會重複打 API
-  function getApplyCounts(custName, custCode) {
-    if (!custName || !custCode) return Promise.resolve(null);
-    let p = state.applyCache.get(custCode);
+  // 同一個職缺可能同時被多張卡片(或重複掃描)要求,共用 Promise 才不會重複打 API
+  function getApplyCount(jobCode) {
+    if (!jobCode) return Promise.resolve(null);
+    let p = state.applyCache.get(jobCode);
     if (p) return p;
-    p = api.applyCountsByCompany(custName, custCode).catch(() => null);
-    state.applyCache.set(custCode, p);
+    p = api.applyCount(jobCode).catch(() => null);
+    state.applyCache.set(jobCode, p);
+    return p;
+  }
+
+  // 同一間公司的開缺總數也只問一次
+  function getCompanyTotal(custCode) {
+    if (!custCode) return Promise.resolve(null);
+    const key = 'total:' + custCode;
+    let p = state.companyCache.get(key);
+    if (p) return p;
+    p = api.companyTotal(custCode).catch(() => null);
+    state.companyCache.set(key, p);
     return p;
   }
 
@@ -74,29 +84,48 @@
     return { entry: null, totalCount };
   }
 
+  /**
+   * 公司資料要拿多少,看呼叫端手上有沒有 interactionRecord。
+   *
+   * 搜尋 API 與職缺內頁 API 都自帶 interactionRecord,格式和公司職缺 API 的一模一樣,
+   * 那就只缺開缺總數,一次 pageSize=1 就夠。以前不論如何都往公司 API 翻頁找那一筆,
+   * 實測一頁 22 張卡片要打 36 次(鴻海翻滿 6 頁上限還是沒找到,6 次全白費),
+   * 改成看情況之後降到 22 次。
+   *
+   * 公司頁的卡片沒有搜尋列可用,那裡才需要整份 entry。
+   */
+  async function fetchCompanyFacts(custCode, jobCode, haveInteraction) {
+    if (haveInteraction) {
+      return { entry: null, totalCount: await getCompanyTotal(custCode) };
+    }
+    return findCompanyEntry(custCode, jobCode);
+  }
+
   async function analyse(searchRow, jobDetail) {
     const jobCode = (searchRow && searchRow.jobCode) || null;
     const custCode = (searchRow && searchRow.custCode) || (jobDetail && jobDetail.custCode);
-    const custName = (searchRow && searchRow.custName) || (jobDetail && jobDetail.custName);
+    const haveInteraction = !!(
+      (searchRow && searchRow.interactionRecord) ||
+      (jobDetail && jobDetail.interactionRecord)
+    );
 
-    // 公司頁與職缺詳細頁的來源都沒有應徵人數,要另外用公司名稱查搜尋 API 補
-    const needApplyCnt = !searchRow || typeof searchRow.applyCnt !== 'number';
-
-    const [company, history, applyCounts] = await Promise.all([
-      findCompanyEntry(custCode, jobCode),
+    // 搜尋 / 公司職缺 / 職缺內頁三個 API 的 applyCnt 都被 104 歸零了,
+    // 精確人數一律走應徵分析端點,每個職缺各問一次。
+    const [company, history, applyCnt] = await Promise.all([
+      fetchCompanyFacts(custCode, jobCode, haveInteraction),
       touchHistory(jobCode, searchRow && searchRow.appearDate),
-      needApplyCnt ? getApplyCounts(custName, custCode) : null,
+      getApplyCount(jobCode),
     ]);
 
     const facts = score.buildFacts({
       searchRow,
       companyEntry: company.entry,
       companyTotal: company.totalCount,
-      applyCnt: applyCounts && jobCode ? applyCounts[jobCode] : undefined,
+      applyCnt,
       history,
       jobDetail,
     });
-    return { facts, result: score.scoreJob(facts) };
+    return facts;
   }
 
   /* ---------- 搜尋結果頁 ---------- */
@@ -165,18 +194,20 @@
       loading.remove();
       return;
     }
-    if (!row) {
-      loading.replaceWith(badge.renderError('找不到這個職缺的資料'));
-      return;
-    }
-
     try {
-      const { facts, result } = await analyse(row, null);
+      /* 對不上搜尋結果時走職缺內頁 API。
+       *
+       * decorateCard 只認外掛自己重打的那份搜尋結果,而置頂職缺不隨關鍵字走 ——
+       * 重打一次換了別的幾筆,那兩三張卡就永遠對不上。卡片連結裡有 base36 代碼,
+       * 職缺內頁 API 自備 interactionRecord 與 analysisType,
+       * 跟推薦頁同一條路,不必為此多維護一套資料來源。
+       */
+      const facts = row ? await analyse(row, null) : await factsFromCardLink(card);
       if (card.dataset.gjdFor !== jobNo || !loading.isConnected) {
         loading.remove();
         return;
       }
-      loading.replaceWith(badge.render(facts, result));
+      loading.replaceWith(facts ? badge.render(facts) : badge.renderError('找不到這個職缺的資料'));
     } catch (e) {
       loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
     }
@@ -213,13 +244,13 @@
     anchor.after(loading);
 
     try {
-      // 職缺本身的資料來自公司 API;應徵人數只有搜尋 API 有,靠 custName 去補
-      const { facts, result } = await analyse({ jobCode, custCode, custName }, null);
+      // 職缺本身的資料來自公司 API,應徵人數由應徵分析端點補
+      const facts = await analyse({ jobCode, custCode, custName }, null);
       if (card.dataset.gjdFor !== jobCode || !loading.isConnected) {
         loading.remove();
         return;
       }
-      loading.replaceWith(badge.render(facts, result));
+      loading.replaceWith(badge.render(facts));
     } catch (e) {
       loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
     }
@@ -239,7 +270,7 @@
   /**
    * 只知道 base36 職缺代碼時的分析路徑。
    * 職缺詳細頁 API 沒有 applyCnt,也沒有 interactionRecord 的解析結果 ——
-   * analyse() 會用 custCode 去公司 API 拿互動紀錄,用 custName 去搜尋 API 補應徵人數。
+   * analyse() 會用 custCode 去公司 API 拿互動紀錄,再由應徵分析端點補應徵人數。
    * 職缺內頁與推薦頁共用這條路。
    */
   async function analyseByJobCode(jobCode, detail) {
@@ -249,9 +280,23 @@
       custName: detail.custName,
       custCode: detail.custCode,
       appearDate: detail.appearDate,
-      hrBehaviorPR: detail.hrBehaviorPR,
+      analysisType: detail.analysisType,
     };
     return analyse(pseudoRow, detail);
+  }
+
+  /** 只有 base36 代碼可用時的入口:推薦頁、搜尋頁置頂缺共用 */
+  async function factsFromJobCode(jobCode) {
+    const detail = await api.jobContent(jobCode);
+    if (!detail) return null;
+    return analyseByJobCode(jobCode, detail);
+  }
+
+  /** 從卡片連結取出 base36 代碼再走上面那條路;取不到代碼就回 null */
+  async function factsFromCardLink(card) {
+    const a = card.querySelector('a[href*="/job/"]');
+    const jobCode = a ? u.jobCodeFromUrl(a.getAttribute('href') || a.href) : null;
+    return jobCode ? factsFromJobCode(jobCode) : null;
   }
 
   /* ---------- AI 推薦頁 ---------- */
@@ -276,22 +321,15 @@
     anchor.after(loading);
 
     try {
-      const detail = await api.jobContent(jobCode);
+      const facts = await factsFromJobCode(jobCode);
       // 卡片可能在等待期間被回收
       if (card.dataset.gjdFor !== jobCode || !loading.isConnected) {
         loading.remove();
         return;
       }
-      if (!detail) {
-        loading.replaceWith(badge.renderError('無法取得這個職缺的資料'));
-        return;
-      }
-      const { facts, result } = await analyseByJobCode(jobCode, detail);
-      if (card.dataset.gjdFor !== jobCode || !loading.isConnected) {
-        loading.remove();
-        return;
-      }
-      loading.replaceWith(badge.render(facts, result));
+      loading.replaceWith(
+        facts ? badge.render(facts) : badge.renderError('無法取得這個職缺的資料')
+      );
     } catch (e) {
       loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
     }
@@ -309,7 +347,12 @@
     const jobCode = u.jobCodeFromUrl(location.pathname);
     if (!jobCode) return;
 
-    const header = document.querySelector('.job-header__title') || document.querySelector('.job-header');
+    /* 104 改版過標題容器,新舊版都要認:舊版 .job-header,改版後 .jobmobile-header。
+     * 順序是「越精確的越前面」,任何一個對上就掛得住。 */
+    const header =
+      document.querySelector('.job-header__title') ||
+      document.querySelector('.job-header') ||
+      document.querySelector('.jobmobile-header');
     if (!header || header.dataset.gjdFor === jobCode) return;
     header.dataset.gjdFor = jobCode;
     const old = document.querySelector('.gjd-badge--page');
@@ -323,8 +366,8 @@
       return;
     }
 
-    const { facts, result } = await analyseByJobCode(jobCode, detail);
-    const el = badge.render(facts, result);
+    const facts = await analyseByJobCode(jobCode, detail);
+    const el = badge.render(facts);
     el.classList.add('gjd-badge--page');
     header.append(el);
   }
@@ -357,8 +400,6 @@
     const box = await chrome.storage.local.get('gjd:enabled');
     state.enabled = box['gjd:enabled'] !== false;
     if (!state.enabled) return;
-
-    u.noteActiveDay();
 
     route();
 

@@ -93,6 +93,12 @@
   th { color: var(--muted); font-weight: 500; }
 
   .note { color: var(--muted); font-size: 14px; }
+
+  /* 步驟裡的示意圖:比正文窄一點,才不會喧賓奪主 */
+  .step-shot { display: block; width: 100%; max-width: 620px; height: auto; margin: 10px 0 2px;
+    border: 1px solid var(--border); border-radius: 8px; }
+  .step-shot--wide { max-width: 100%; }
+  .step-cap { color: var(--muted); font-size: 13px; margin: 4px 0 0; }
   figure.shot { margin: 0 0 22px; }
   figure.shot img {
     display: block; width: 100%; height: auto;
@@ -104,13 +110,6 @@
   footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border);
     color: var(--muted); font-size: 14px; }
 
-  /* 停用公告固定為淺底深字:它是全頁最重要的訊息,不隨主題浮動。
-     底色寫死就必須連文字色一起寫死,只固定一半會在深色主題下變成看不見。 */
-  .gjd-notice, .gjd-notice p, .gjd-notice li { color: #4c1d1d; }
-  .gjd-notice h2 { color: #991b1b; }
-  .gjd-notice strong { color: #7f1d1d; }
-  .gjd-notice .note { color: #78504f; }
-  .gjd-notice a { color: #991b1b; }
 </style>
 </head>
 <body>
@@ -119,116 +118,113 @@
 <header>
   <img class="mark" src="icon256.png" alt="" />
   <h1>幽靈職缺偵測器</h1>
-  <p class="tagline">在 104 人力銀行的職缺上,直接顯示 HR 到底有沒有在處理履歷。<br /><strong>已停止建議使用(2026-09-04)</strong></p>
+  <p class="tagline">
+    在 104 人力銀行的職缺上,把 104 手上有、但頁面上不顯示的那半邊數據直接印出來。<br />
+    <span class="note">這一頁只講怎麼安裝。它做什麼、資料哪裡來,見
+    <a href="https://github.com/fansia/104-ghost-job-detector#readme">GitHub 上的說明</a>。</span>
+  </p>
   <span class="unofficial">第三方獨立開發,非 104 人力銀行官方產品</span>
 </header>
 
 
-<div class="card gjd-notice" style="border-left:5px solid #991b1b;background:#fef2f2;color:#4c1d1d;margin-bottom:26px">
-  <h2 style="margin:0 0 12px;font-size:22px;color:#991b1b">這個外掛已經沒有存在的必要,請不要再安裝</h2>
-
-  <p style="margin:0 0 12px">
-    <strong>2026-09-04,104 調整了資料格式。</strong>原本能取得的三項資訊 ——
-    HR 上次處理履歷的精確時間、應徵人數的精確數字、HR 活躍度百分位 —— 都不再提供。
-  </p>
-
-  <p style="margin:0 0 12px">
-    這個外掛的用途,是把 104 資料庫裡有、但頁面上不顯示的那一半補出來。
-    改版之後,我們能拿到的幾乎就是 104 已經寫在頁面上的東西:
-    同樣的「N 天內處理過履歷」、同樣的應徵人數級距。
-    <strong>沒有額外資訊,就沒有安裝它的理由。</strong>
-  </p>
-
-  <p style="margin:0 0 12px">
-    差異還剩什麼,也講清楚:104 只在「有紀錄」時顯示那一行,沒有紀錄時整行不顯示,
-    本外掛仍會標出「30 天內無處理紀錄」。但只為了這一點而多裝一個擴充功能,不划算。
-  </p>
-
-  <ul style="margin:0 0 12px;padding-left:20px">
-    <li><strong>還沒安裝的:</strong>不用裝了。</li>
-    <li><strong>已經安裝的:</strong>留著或移除都可以。它不會造成任何危害,只是幫助有限。</li>
-    <li><strong>原始碼仍以 MIT 授權公開</strong>,任何人都可以接手、參考或改作。</li>
-  </ul>
-
-  <p class="note" style="margin:0">
-    謝謝這幾天回報問題的每一位。特別是指出「無紀錄不等於從未回覆」的那位,
-    以及這次回報「明明面試過的公司卻被標成無紀錄」的那位 ——
-    兩次都是在阻止這個工具冤枉真實的公司。
-    以下內容原樣保留,作為這個專案做過什麼的紀錄。
-  </p>
-</div>
-
 <h2>它解決什麼問題</h2>
+
 <p>
-  104 的資料庫其實記錄了每個職缺「上次處理履歷」和「上次回覆應徵者」的時間,
-  而且 104 網頁自己載入職缺時就會把這些欄位抓回你的瀏覽器。但 104 只會在頁面上顯示正面的那一半
-  (例如「7 天內處理過履歷」),從不告訴你這家公司<strong>近 30 天內一個應徵者都沒回覆過</strong>。
+  104 的資料庫記得每個職缺「上次處理履歷」和「上次回覆應徵者」是幾天前,而且載入職缺時
+  就把這些欄位送到你的瀏覽器了 —— 但頁面上<strong>只顯示正面的那一半</strong>:
+  「3 天內處理過履歷」會出現,「近 30 天內一個應徵者都沒回覆過」則整行消失。
+  應徵人數也一樣,只給「6~10 人」的級距,不給精確數字。
 </p>
-<p>這個外掛把另一半補上。每張職缺卡片會多出一列徽章:</p>
+
+<p>這個外掛把另一半補上,然後就閉嘴 —— 不評分、不分級,也不推論職缺真假。</p>
 
 <figure class="shot">
-  <img src="screenshot.png" alt="104 職缺頁上的偵測徽章,展開後顯示 HR 活躍度、上次處理履歷、上次回覆應徵者、刊登天數、應徵人數等原始數據" />
+  <img src="screenshot.png" alt="104 搜尋結果頁的兩張職缺卡片,各多出一列數據:處理履歷、回覆應徵者、應徵人數、刊登日期、公司開缺" />
   <figcaption>
-    點開徽章會展開完整原始數據 ——「上次回覆是 56 天前」「11 天沒處理履歷」這些,
-    104 從頭到尾不會顯示。(圖中的「應徵人數」與「HR 活躍度」兩列拍攝於 104
-    改版前,目前已無法取得,見上方公告。)
+    上面那個缺掛了 150 天(紅色),但 HR 七天內仍處理過履歷(綠色 ✓)——
+    掛得久多半是常年開缺,不是幽靈職缺,所以這兩個顏色不衝突。
+    每項數據的意思寫在<a href="https://github.com/fansia/104-ghost-job-detector#readme">
+    GitHub 的說明</a>裡。(公司名稱、職稱與職務描述為佔位內容,數據是真實輸出。)
   </figcaption>
 </figure>
 
 <h2>安裝</h2>
 
-<div class="card">
-  <h3 style="margin-top:0">方式一:Chrome 線上應用程式商店(建議)</h3>
-  <p style="margin:0 0 14px">
-    <a class="btn" href="https://chromewebstore.google.com/detail/ollabfbopbnckocijfnahjeaoalbnbej">前往 Chrome 線上應用程式商店</a>
-  </p>
-  <p class="note" style="margin-bottom:0">
-    一鍵安裝,而且會自動更新。<br />
-    商店的版本可能會落後 <a href="https://github.com/fansia/104-ghost-job-detector/releases/latest">GitHub Releases</a> 一段時間
-    —— 每次改版都要重新送審,而審查通常要數週。想要最新版,用下面的方式二。
+<div class="card" style="border-left:4px solid var(--border)">
+  <p style="margin:0 0 10px"><strong>目前沒有上架 Chrome 線上應用程式商店。</strong></p>
+  <p class="note" style="margin:0">
+    104 這陣子一直在調整內部 API 的資料格式,而商店每次改版都要重新送審、審查通常要數週 ——
+    等審過了,外掛可能已經又要跟著改一次。與其讓商店上永遠掛著一個過時、甚至已經失效的版本,
+    不如先只走手動安裝:程式碼公開、隨時可以更新。等 104 那邊穩定下來再考慮上架。
   </p>
 </div>
 
 <div class="card">
-  <h3 style="margin-top:0">方式二:手動安裝(想搶先用最新版)</h3>
+  <h3 style="margin-top:0">手動安裝(開發人員模式)</h3>
+  <p class="note" style="margin:0 0 18px">
+    以下畫面是英文版 Chrome。介面語言若是中文,對應的字是
+    <strong>「開發人員模式」</strong>與<strong>「載入未封裝項目」</strong>。
+  </p>
   <ol class="steps">
     <li>
+      <strong>下載並解壓縮。</strong>
       到 <a href="https://github.com/fansia/104-ghost-job-detector/releases/latest">最新版本頁面</a>
-      下載 <code>ghost-job-detector-x.y.z.zip</code>,解壓縮到一個你不會刪掉的資料夾。
+      下載 <code>ghost-job-detector-x.y.z.zip</code>,解壓縮到一個<strong>你不會刪掉</strong>的資料夾 ——
+      Chrome 之後每次啟動都會去那個位置讀,資料夾搬走或刪掉,外掛就會失效。
     </li>
-    <li>打開 Chrome,在網址列輸入 <code>chrome://extensions/</code> 後按 Enter。</li>
     <li>
-      把右上角的<strong>「開發人員模式」</strong>打開。
-      <strong>裝好之後也要保持開啟</strong> —— 關掉它,這個外掛就會被 Chrome 一起停用。
+      <strong>打開擴充功能頁面。</strong>
+      在 Chrome 網址列輸入 <code>chrome://extensions/</code> 後按 Enter。
     </li>
-    <li>點左上角<strong>「載入未封裝項目」</strong>,選擇剛才解壓縮出來的資料夾。</li>
     <li>
-      到 <a href="https://www.104.com.tw/jobs/search/">104 找工作</a> 搜尋任何職缺,
-      徽章就會出現在每張卡片上。
+      <strong>打開右上角的「開發人員模式」(Developer mode)。</strong>
+      <img class="step-shot step-shot--wide" src="install-1-devmode.png"
+           alt="Chrome 擴充功能頁面右上角的開發人員模式開關,已標示位置" />
+      <p class="step-cap">
+        <strong>裝好之後也要保持開啟</strong> —— 關掉它,這個外掛會被 Chrome 一起停用。
+        這是「裝了但沒反應」最常見的原因。
+      </p>
+    </li>
+    <li>
+      <strong>點左上角的「載入未封裝項目」(Load unpacked),選擇第 1 步解壓縮出來的資料夾。</strong>
+      <img class="step-shot step-shot--wide" src="install-2-load-unpacked.png"
+           alt="Chrome 擴充功能頁面左上角的載入未封裝項目按鈕,已標示位置" />
+      <p class="step-cap">
+        這個按鈕只有在開發人員模式打開後才會出現。選資料夾時要選<strong>含有
+        <code>manifest.json</code> 的那一層</strong>,不是它的上層。
+      </p>
+    </li>
+    <li>
+      <strong>確認外掛已經出現在清單上。</strong>
+      <img class="step-shot" src="install-3-installed.png"
+           alt="安裝完成後,擴充功能清單上出現「幽靈職缺偵測器(104 非官方)」的卡片" />
+      <p class="step-cap">右下角的開關是藍色,代表已啟用。</p>
+    </li>
+    <li>
+      <strong>到 <a href="https://www.104.com.tw/jobs/search/">104 找工作</a> 搜尋任何職缺。</strong>
+      每張職缺卡片上會多出一列數據,就像最上面那張圖。
+      如果你在安裝前就已經開著 104 的分頁,記得重新整理:外掛只在頁面載入時注入。
+    </li>
+  </ol>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">有新版時怎麼更新</h3>
+  <p class="note" style="margin:0 0 14px">手動安裝不會自動更新,要自己來,但只有兩步:</p>
+  <ol class="steps">
+    <li>
+      回到 <a href="https://github.com/fansia/104-ghost-job-detector/releases">Releases</a>
+      下載新版 zip,<strong>解壓縮覆蓋掉原本那個資料夾</strong>(位置不要換,換了要重新載入一次)。
+    </li>
+    <li>
+      到 <code>chrome://extensions/</code>,點這個外掛卡片上的<strong>重新載入</strong>圖示。
+      <img class="step-shot" src="install-4-reload.png"
+           alt="擴充功能卡片右下角的重新載入圖示,已標示位置" />
+      <p class="step-cap">然後重新整理 104 的分頁就會跑新版了。</p>
     </li>
   </ol>
   <p class="note" style="margin-top:16px">
-    手動安裝不會自動更新;有新版時請回到
-    <a href="https://github.com/fansia/104-ghost-job-detector/releases">Releases</a>
-    重新下載,並在 <code>chrome://extensions/</code> 點該外掛的「重新載入」。
-    另外 Chrome 每次啟動可能會提醒你「停用開發人員模式的擴充功能」—— 點「保留」即可。
-  </p>
-</div>
-
-<h2>有重大更新時通知我</h2>
-
-<div class="card">
-  <p style="margin:0 0 12px">
-    已經上架了,所以那封「上架通知」不會再寄。之後只有重大更新
-    (例如 104 改版導致外掛失效、或計分方式有大調整)才會寄,大概一年幾次,隨時可以退訂。
-  </p>
-  <p style="margin:0 0 14px">
-    <a class="btn" href="https://ericyensc.substack.com/s/ghost-job-detector">留下 email</a>
-  </p>
-  <p class="note" style="margin:0">
-    訂閱是在 Substack 上處理的,你的 email 交給 Substack,不會進到這個外掛,
-    也不會傳給任何其他地方。<strong>外掛本身依然不蒐集任何資料</strong> ——
-    這兩件事是分開的。
+    另外 Chrome 每次啟動可能會提醒你「停用開發人員模式的擴充功能」—— 點<strong>「保留」</strong>,不要點停用。
   </p>
 </div>
 
@@ -253,7 +249,8 @@
   <ol class="steps">
     <li>
       <strong>「開發人員模式」被關掉了。</strong>
-      這是最常見的原因。手動安裝的擴充功能靠它才能執行,安裝完把它關掉,外掛就會一起被停用。
+      這是最常見的原因。手動安裝的擴充功能靠它才能執行,安裝完把它關掉,外掛就會一起被停用
+      (見上面安裝步驟第 3 步的圖)。
       到 <code>chrome://extensions/</code> 確認右上角的開關是開的。
     </li>
     <li>
@@ -281,96 +278,16 @@
   </p>
 </div>
 
-<h2>正向訊號:值得優先投的缺</h2>
-
-<p>
-  風險分數只會叫你別投,所以另外加了一個綠色的「機會」徽章,三個條件同時成立才會出現:
-</p>
-
-<div class="tbl-wrap">
-<table>
-  <tr><th>條件</th><th>門檻</th></tr>
-  <tr><td>目前應徵人數少</td><td>≤ 3 人</td></tr>
-  <tr><td>刊登(更新)時間新</td><td>≤ 7 天</td></tr>
-  <tr><td>HR 近期真的在看履歷</td><td>≤ 7 天內處理過</td></tr>
-  <tr><td>幾乎沒有風險訊號</td><td>分數 ≤ 9</td></tr>
-</table>
-</div>
-
-<p class="note" style="margin-top:14px">
-  <strong>為什麼不能只看應徵人數。</strong>
-  實測 1,144 筆:3 人以下應徵的職缺佔了 <strong>54%</strong>,標了等於沒標;而且它們的
-  刊登天數中位數(4 天)並沒有比 11–30 人那組(3 天)新 —— 少人應徵不代表新刊登。
-  其中還有 16.6% 是「掛了三週以上還沒人投」的滯銷缺,中位數 21 天,
-  只看應徵人數會把求職者推去投這些。三個條件的交集約佔 30%。
-</p>
-
-<h2>評分怎麼算</h2>
-<p>
-  分數 0–100,由多個訊號加總而成,分級為
-  <code>0–19 正常</code> / <code>20–39 留意</code> /
-  <code>40–64 可疑</code> / <code>65+ 高風險</code>。
-</p>
-<div class="tbl-wrap">
-<table>
-  <tr><th>訊號</th><th>分數</th></tr>
-  <tr><td><s>HR 活躍度 PR &lt; 30 / &lt; 50</s></td><td><s>+30 / +15</s>(欄位已被 104 移除,不再計分)</td></tr>
-  <tr><td>近 30 天內無處理紀錄</td><td>+30</td></tr>
-  <tr><td>超過 14 天 / 7 天沒處理履歷</td><td>+22 / +14</td></tr>
-  <tr><td>近 30 天內無 104 站內回覆紀錄</td><td><strong>不計分</strong>(僅呈現)</td></tr>
-    <tr><td>刊登超過 90 / 60 / 30 天</td><td>+18 / +12 / +6</td></tr>
-  <tr><td>50 人以上應徵但一週沒處理</td><td>+10</td></tr>
-  <tr><td>公司同時開 30 / 15 個缺以上</td><td>+10 / +5</td></tr>
-  <tr><td>觀察期間重新刊登 2 次以上</td><td>+15</td></tr>
-  <tr><td>待遇面議</td><td>+4</td></tr>
-</table>
-</div>
-<p class="note" style="margin-top:14px">
-  <strong>0 人應徵的職缺不套用互動訊號。</strong>
-  沒人投,就沒有履歷可處理、也沒有人可以回覆,紀錄是空的是必然,不是「已讀不回」的證據 ——
-  這時「無處理紀錄」和「無回覆紀錄」都不扣分,改顯示中性提示。刊登時長等其他訊號照算。
-</p>
-<p class="note" style="margin-top:14px">
-  <strong>分數只是排序用的摘要。</strong>
-  把真職缺誤標成假的,對求職者和公司都是傷害,所以 UI 一律同時呈現原始數據,
-  讓你自己判斷,而不是給一個武斷的結論。權重定義在
-  <a href="https://github.com/fansia/104-ghost-job-detector/blob/main/src/score.js">src/score.js</a>,
-  歡迎依實際情況調整。
-</p>
-
-<h2>隱私</h2>
-<div class="card">
-  <p style="margin:0 0 10px"><strong>不蒐集、不上傳任何資料。</strong>開發者沒有伺服器。</p>
-  <p class="note" style="margin:0">
-    所有請求都由你的瀏覽器以同源請求直接送到 <code>www.104.com.tw</code>,不經過任何第三方。
-    資料取自 104 網頁前端自己使用的內部 JSON API —— <strong>不是</strong> 104 官方對外開放、
-    需申請金鑰的 Open API,未公開文件,也因此隨時可能改版失效。
-    <code>chrome.storage.local</code> 只存 API 快取(最長 6 小時)、職缺觀察紀錄與四個使用量計數,全部留在你的電腦上,
-    可從彈出視窗一鍵清除。完整說明見
-    <a href="https://github.com/fansia/104-ghost-job-detector/blob/main/PRIVACY.md">隱私權政策</a>。
-  </p>
-</div>
-
-<h2>已知限制</h2>
-<ul class="note">
-  <li>104 沒有公開「首次刊登日期」,<code>appearDate</code> 只是最後更新日。真正的刊登時長要靠外掛長期累積觀察紀錄。</li>
-  <li>應徵人數只有搜尋 API 有,公司職缺 API 與職缺詳細頁 API 都沒有。搜尋 API 又不支援以公司過濾,
-    只能用公司名稱當關鍵字再比對公司代碼 —— 公司名稱夠特殊時能完整對上,名稱通用時只撈得到一部分,
-    對不到的職缺就不顯示應徵人數。</li>
-  <li>HR 的「處理履歷」不一定是真人動作。104 會做系統自動配對推薦,那類動作可能也算進
-    處理紀錄。實測過所有欄位,<strong>沒有任何欄位能分辨真人與系統動作</strong> ——
-    看到「HR 昨天處理過履歷」時請保留一點餘地。</li>
-  <li>依賴 104 未公開文件的 API,對方改版可能失效。</li>
-  <li><code>hrBehaviorPR</code> 的確切計算方式是 104 的內部邏輯,我們只知道它是活躍度百分位。</li>
-</ul>
-
 <p style="margin-top:32px">
   <a class="btn" href="https://github.com/fansia/104-ghost-job-detector/releases/latest">下載最新版本</a>
   <a class="btn ghost" href="https://github.com/fansia/104-ghost-job-detector">在 GitHub 上檢視原始碼</a>
 </p>
 
 <footer>
-  MIT 授權開源 ・ 與 104 資訊科技股份有限公司無隸屬關係 ・
+  <a href="privacy.html">隱私權政策</a> ・
+  <a href="https://github.com/fansia/104-ghost-job-detector">GitHub</a> ・
+  MIT 授權開源<br />
+  與 104 資訊科技股份有限公司無隸屬關係 ・
   「104」為其權利人之商標,此處僅為說明本外掛適用範圍。
 </footer>
 
