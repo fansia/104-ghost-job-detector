@@ -13,7 +13,107 @@
     exhausted: false,
     companyCache: new Map(), // "custCode:page" -> Promise<companyJobs()>
     applyCache: new Map(), // jobCode -> Promise<應徵人數>
+    hidden: null, // 隱藏規則,init 時載入,storage 變動時更新
+    /* 使用者在摺疊列上按過「顯示」的卡片。只活在這一次瀏覽,不寫進 storage ——
+     * 那是「這張我想看一下」,不是「取消這條規則」。被放行的卡片右上角那顆鈕
+     * 會變成「解除隱藏」,要真的解除規則從那裡走。 */
+    overrides: new Set(),
   };
+
+  /* ---------- 隱藏 ---------- */
+
+  /**
+   * 決定這張卡片要畫徽章還是摺疊起來。
+   * 三個頁面共用,所以掛載點與 key 由呼叫端給。
+   */
+  function mountBadge(card, facts, key, loading) {
+    // 不管有沒有被放行都先算一次:規則是否命中,決定右上角那顆鈕是哪一顆
+    const reason = u.hiddenReason(facts, state.hidden);
+
+    if (reason && !state.overrides.has(key)) {
+      loading.remove();
+      card.classList.add('gjd-card-hidden');
+      countHiddenSoon();
+      card.prepend(
+        badge.renderHiddenBar(facts, reason, {
+          onUndo: () => u.undoHidden(reason),
+          onReveal: () => {
+            state.overrides.add(key);
+            resetCard(card);
+            schedule();
+          },
+        })
+      );
+      return;
+    }
+
+    /* 這張卡片明明命中規則卻看得到,代表是被放行出來的 —— 那顆鈕要講「解除隱藏」。
+     * 繼續顯示「隱藏」等於謊報狀態:按下去什麼也不會發生(規則本來就在),
+     * 使用者只會覺得壞了。 */
+    const action = reason
+      ? {
+          label: '解除隱藏',
+          title: `解除:${reason.text}`,
+          onClick: () => u.undoHidden(reason),
+        }
+      : facts.custCode
+        ? {
+            label: '隱藏',
+            title: facts.custName ? `不再顯示「${facts.custName}」的職缺` : '隱藏這家公司的職缺',
+            onClick: () => hideCompany(facts),
+          }
+        : null;
+
+    loading.replaceWith(badge.render(facts, action));
+    countHiddenSoon();
+  }
+
+  async function hideCompany(facts) {
+    /* 放行紀錄整組清掉:使用者說「隱藏」時要的是現在就看不到,
+     * 不是「除了我剛才點開的那幾張以外」。 */
+    state.overrides.clear();
+    const ok = await u.hideCompany(facts.custCode, facts.custName);
+    // 保險:值沒變時 storage 的 onChanged 不會發出來,得自己重畫一次
+    if (ok) redecorateAll();
+  }
+
+  /* ---------- 「這一頁隱藏了幾筆」 ----------
+   *
+   * 過濾器最怕的是沒有回饋:職缺莫名其妙變少,使用者不會想到是自己設的規則,
+   * 只會覺得 104 壞了或外掛壞了。摺疊列講得出單筆,講不出總數。
+   *
+   * 走 storage 而不是訊息傳遞,是為了不加 tabs 權限 —— 這個外掛目前只要
+   * storage 加一個網域,審查時那是加分項,不值得為一個數字放寬。
+   */
+
+  const PAGE_HIDDEN_KEY = 'gjd:pageHidden';
+  let countTimer = null;
+
+  function countHiddenSoon() {
+    if (countTimer) return;
+    countTimer = setTimeout(() => {
+      countTimer = null;
+      const count = document.querySelectorAll('.gjd-card-hidden').length;
+      chrome.storage.local
+        .set({ [PAGE_HIDDEN_KEY]: { count, at: Date.now() } })
+        .catch(() => {});
+    }, 400);
+  }
+
+  /** 清掉一張卡片上所有外掛留下的東西,讓它可以重畫 */
+  function resetCard(card) {
+    delete card.dataset.gjdFor;
+    card.classList.remove('gjd-card-hidden');
+    card.querySelectorAll(':scope > .gjd-hidden-bar').forEach((e) => e.remove());
+    card.querySelectorAll('.gjd-badge').forEach((e) => e.remove());
+  }
+
+  function redecorateAll() {
+    document.querySelectorAll('[data-gjd-for]').forEach(resetCard);
+    document.querySelectorAll('.gjd-hidden-bar').forEach((e) => e.remove());
+    document.querySelectorAll('.gjd-card-hidden').forEach((e) => e.classList.remove('gjd-card-hidden'));
+    schedule();
+  }
 
   /* ---------- 觀察紀錄:記下第一次看到的時間與重新刊登次數 ---------- */
 
@@ -178,6 +278,8 @@
     // 卡片被虛擬捲動回收重用時,dataset 會換成別的職缺,要重畫
     if (card.dataset.gjdFor === jobNo) return;
     card.dataset.gjdFor = jobNo;
+    card.classList.remove('gjd-card-hidden');
+    card.querySelectorAll(':scope > .gjd-hidden-bar').forEach((e) => e.remove());
     const old = card.querySelector(':scope > .gjd-badge');
     if (old) old.remove();
 
@@ -207,7 +309,11 @@
         loading.remove();
         return;
       }
-      loading.replaceWith(facts ? badge.render(facts) : badge.renderError('找不到這個職缺的資料'));
+      if (!facts) {
+        loading.replaceWith(badge.renderError('找不到這個職缺的資料'));
+        return;
+      }
+      mountBadge(card, facts, jobNo, loading);
     } catch (e) {
       loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
     }
@@ -234,6 +340,8 @@
     if (!jobCode) return;
     if (card.dataset.gjdFor === jobCode) return;
     card.dataset.gjdFor = jobCode;
+    card.classList.remove('gjd-card-hidden');
+    card.querySelectorAll(':scope > .gjd-hidden-bar').forEach((e) => e.remove());
     const old = card.querySelector(':scope .gjd-badge');
     if (old) old.remove();
 
@@ -250,7 +358,7 @@
         loading.remove();
         return;
       }
-      loading.replaceWith(badge.render(facts));
+      mountBadge(card, facts, jobCode, loading);
     } catch (e) {
       loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
     }
@@ -311,6 +419,8 @@
     if (!jobCode) return;
     if (card.dataset.gjdFor === jobCode) return;
     card.dataset.gjdFor = jobCode;
+    card.classList.remove('gjd-card-hidden');
+    card.querySelectorAll(':scope > .gjd-hidden-bar').forEach((e) => e.remove());
     const old = card.querySelector(':scope .gjd-badge');
     if (old) old.remove();
 
@@ -327,9 +437,11 @@
         loading.remove();
         return;
       }
-      loading.replaceWith(
-        facts ? badge.render(facts) : badge.renderError('無法取得這個職缺的資料')
-      );
+      if (!facts) {
+        loading.replaceWith(badge.renderError('無法取得這個職缺的資料'));
+        return;
+      }
+      mountBadge(card, facts, jobCode, loading);
     } catch (e) {
       loading.replaceWith(badge.renderError('分析失敗,104 的資料格式可能已變更'));
     }
@@ -401,6 +513,17 @@
     state.enabled = box['gjd:enabled'] !== false;
     if (!state.enabled) return;
 
+    state.hidden = await u.getHidden();
+
+    // 在彈出視窗改了規則(或在別的分頁按了隱藏)要立刻反映,不必重整頁面
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local' || !changes['gjd:hidden']) return;
+      u.getHidden().then((h) => {
+        state.hidden = h;
+        redecorateAll();
+      });
+    });
+
     route();
 
     // 虛擬捲動會不斷替換卡片內容,靠 MutationObserver 補上徽章
@@ -423,9 +546,8 @@
         state.pageFetches.clear();
         state.maxPage = 0;
         state.exhausted = false;
-        document.querySelectorAll('[data-gjd-for]').forEach((e) => delete e.dataset.gjdFor);
-        document.querySelectorAll('.gjd-badge').forEach((e) => e.remove());
-        schedule();
+        state.overrides.clear();
+        redecorateAll();
       }
     }, 800);
   }

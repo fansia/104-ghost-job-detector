@@ -33,6 +33,8 @@ var GJD = (function (ns) {
    *   applyType           應徵人數級距 1~4
    *   applyRangeText      級距的文字,例如「6~10 人」
    *   openJobs            公司目前總開缺數
+   *   custCode            公司代碼,隱藏清單用它當鍵(公司會改名,代碼不會)
+   *   isApplied           你投過這個缺了(未登入時為 null = 不知道)
    *   repostCount         我們觀察期間看到它重新刊登的次數
    *
    * 前三個是滾動時間窗,不是全部歷史。2026-09 改版後處理履歷與回覆都是 30 天
@@ -129,6 +131,9 @@ var GJD = (function (ns) {
       applyType: analysisType,
       applyRangeText: applyRangeText(analysisType),
       openJobs: typeof companyTotal === 'number' ? companyTotal : null,
+      custCode: src.custCode || (jobDetail && jobDetail.custCode) || null,
+      // 未登入時 104 整批回 null,不能當成「沒投過」
+      isApplied: typeof src.isApplied === 'boolean' ? src.isApplied : null,
       repostCount: history ? history.repostCount || 0 : 0,
       firstSeen: history ? history.firstSeen : null,
     };

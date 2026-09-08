@@ -53,6 +53,9 @@ var GJD = (function (ns) {
       interactionRecord: x.interactionRecord || null,
       salaryLow: x.salaryLow,
       salaryHigh: x.salaryHigh,
+      /* 「隱藏我投過的」用得到。isApplied 是登入才有的個人化資料,未登入時整批
+       * 回 null —— 過濾條件必須把 null 當「不知道」而不是「沒投過」。 */
+      isApplied: x.isApplied,
     }));
     await u.cacheSet(key, rows);
     return rows;

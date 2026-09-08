@@ -10,6 +10,13 @@
  * 標籤縮短、長字串(HR 活躍度的門檻說明)移進展開區。
  */
 var GJD = (function (ns) {
+  /* 解除鈕的文字要說出實際會做什麼 —— 解除的是規則,不是只放行這一張。
+   * 「已投過」是全域開關,關掉會影響很多筆,不能講得像只動眼前這一個。 */
+  const UNDO_LABEL = {
+    company: '解除封鎖',
+    hideApplied: '關閉這條規則',
+  };
+
   /** 要呈現的資料。標籤刻意縮短:一張職缺卡上,徽章不該比職缺本身還高。 */
   function buildItems(f) {
     const items = [];
@@ -100,8 +107,14 @@ var GJD = (function (ns) {
     return el;
   }
 
-  /** 建立(或更新)一張卡片的徽章元素 */
-  function render(facts) {
+  /**
+   * 建立(或更新)一張卡片的徽章元素。
+   *
+   * action 是右上角那顆鈕:{ label, title, onClick }。它會隨這張卡片當下的狀態
+   * 在「隱藏」與「解除隱藏」之間換 —— 已經在規則裡、只是被暫時放行出來的卡片,
+   * 再顯示一顆「隱藏」等於謊報狀態。不給 action 就不畫(職缺內頁沒有卡片可摺疊)。
+   */
+  function render(facts, action) {
     const wrap = document.createElement('div');
     wrap.className = 'gjd-badge';
 
@@ -129,6 +142,25 @@ var GJD = (function (ns) {
     }
     data.append(list);
 
+    const actions = document.createElement('div');
+    actions.className = 'gjd-actions';
+
+    /* 這顆鈕放在這一行、不藏進展開區:要隱藏的人通常一次要隱藏好幾家,
+     * 每家都得先展開再點,那個摩擦會讓功能等於不存在。 */
+    if (action) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'gjd-toggle';
+      btn.textContent = action.label;
+      if (action.title) btn.title = action.title;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        action.onClick();
+      });
+      actions.append(btn);
+    }
+
     const toggle = document.createElement('button');
     toggle.type = 'button';
     toggle.className = 'gjd-toggle';
@@ -142,7 +174,8 @@ var GJD = (function (ns) {
     caret.textContent = '▾';
 
     toggle.append(label, caret);
-    top.append(data, toggle);
+    actions.append(toggle);
+    top.append(data, actions);
     wrap.append(top);
 
     const detail = buildDetail();
@@ -157,6 +190,53 @@ var GJD = (function (ns) {
     });
 
     return wrap;
+  }
+
+  /**
+   * 被隱藏的卡片摺疊成這一行。
+   *
+   * 刻意不整張從 DOM 移除:104 的搜尋結果跑在 vue-recycle-scroller 上,
+   * 抽掉節點會跟框架搶 DOM、捲動高度也會亂跳。而且留一行還能講清楚
+   * 「為什麼這張不見了」—— 默默消失的東西最難查。
+   */
+  function renderHiddenBar(facts, reason, handlers) {
+    const bar = document.createElement('div');
+    bar.className = 'gjd-hidden-bar';
+
+    const text = document.createElement('span');
+    text.className = 'gjd-hidden-bar__text';
+    text.textContent = `已隱藏:${facts.custName || '這個職缺'} — ${reason.text}`;
+
+    const acts = document.createElement('span');
+    acts.className = 'gjd-hidden-bar__acts';
+
+    /* 兩顆鈕都放在這裡:要解除規則的人不必先「顯示」再去徽章上找第二顆鈕。
+     * 破壞性的那顆(解除規則)排在前面、樣式較淡,順手的那顆(只看一次)在後面。 */
+    const undo = document.createElement('button');
+    undo.type = 'button';
+    undo.className = 'gjd-hidden-bar__btn';
+    undo.textContent = UNDO_LABEL[reason.kind] || '解除隱藏';
+    undo.title = `解除規則:${reason.text}`;
+    undo.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handlers.onUndo();
+    });
+
+    const reveal = document.createElement('button');
+    reveal.type = 'button';
+    reveal.className = 'gjd-hidden-bar__btn gjd-hidden-bar__btn--strong';
+    reveal.textContent = '顯示';
+    reveal.title = '這次先顯示出來,規則保留';
+    reveal.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handlers.onReveal();
+    });
+
+    acts.append(undo, reveal);
+    bar.append(text, acts);
+    return bar;
   }
 
   function renderLoading() {
@@ -178,6 +258,6 @@ var GJD = (function (ns) {
     return wrap;
   }
 
-  ns.badge = { render, renderLoading, renderError };
+  ns.badge = { render, renderHiddenBar, renderLoading, renderError };
   return ns;
 })(typeof GJD === 'undefined' ? {} : GJD);

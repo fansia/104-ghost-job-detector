@@ -39,6 +39,43 @@
         cursor: pointer;
       }
       .note { margin-top: 10px; color: #999; font-size: 11px; }
+
+      /* 隱藏規則。用 details 收起來:大部分人不會用到,不該一打開就佔滿視窗。
+         但收起來的那一列必須一眼看得出可以點 —— 只有一行字加一個小三角形時,
+         使用者根本不知道底下還有東西,等於功能不存在。
+         做成有邊框、有底色、有 hover 的一整塊,跟上面的資訊列明顯不同。 */
+      details.rules { margin-top: 12px; }
+      details.rules > summary {
+        cursor: pointer; list-style: none;
+        display: flex; justify-content: space-between; align-items: center; gap: 8px;
+        padding: 8px 10px;
+        border: 1px solid #dcdfe4; border-radius: 6px; background: #f7f8f9;
+        font-size: 13px; font-weight: 500; color: #333;
+        user-select: none;
+      }
+      details.rules > summary:hover { background: #eef0f3; border-color: #c9ced6; }
+      details.rules > summary::-webkit-details-marker { display: none; }
+      details.rules[open] > summary { border-radius: 6px 6px 0 0; border-bottom-color: transparent; }
+      .rules__count { margin-left: auto; color: #888; font-weight: 400; font-size: 12px; }
+      .rules__caret { color: #888; font-size: 11px; flex: none; }
+      details.rules[open] .rules__caret { transform: rotate(180deg); }
+      .rules__body {
+        margin-top: 0; padding: 10px;
+        border: 1px solid #dcdfe4; border-top: 0; border-radius: 0 0 6px 6px;
+      }
+      .opt { display: flex; align-items: flex-start; gap: 7px; margin-bottom: 7px; font-size: 12px; }
+      .opt input { margin: 3px 0 0; flex: none; }
+      .opt small { display: block; color: #999; font-size: 11px; line-height: 1.5; }
+      .list { margin: 4px 0 10px; padding: 0; list-style: none; }
+      .list li {
+        display: flex; align-items: center; gap: 6px;
+        padding: 3px 0; font-size: 12px; border-bottom: 1px solid #f2f2f2;
+      }
+      .list li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .list li button { padding: 1px 7px; font-size: 11px; }
+      .list.empty { color: #aaa; font-size: 11px; padding: 3px 0 8px; }
+      .rules h3 { margin: 10px 0 2px; font-size: 12px; font-weight: 600; color: #444; }
+      .hint { margin: 6px 0 0; color: #aaa; font-size: 11px; line-height: 1.6; }
       .support {
         margin: 10px 0 0; padding-top: 10px; border-top: 1px solid #eee;
         color: #777; font-size: 11px; line-height: 1.7;
@@ -72,11 +109,36 @@
       <span id="tracked">—</span>
     </div>
     <div class="row">
+      <span>這一頁隱藏了</span>
+      <span id="pageHidden">—</span>
+    </div>
+    <div class="row">
       <span>清除快取與紀錄</span>
       <button id="clear">清除</button>
     </div>
 
     <div id="health" class="warn" hidden></div>
+
+    <details class="rules">
+      <summary>
+        <span>⊘ 隱藏規則</span>
+        <span class="rules__count" id="rulesCount">點開設定</span>
+        <span class="rules__caret">▼</span>
+      </summary>
+      <div class="rules__body">
+        <label class="opt">
+          <input type="checkbox" id="hideApplied" />
+          <span>隱藏我投過的職缺
+            <small>需要登入 104。未登入時這個資訊拿不到,規則會自動失效。</small>
+          </span>
+        </label>
+        <h3 id="companyHead">封鎖的公司</h3>
+        <ul class="list" id="companyList"></ul>
+        <p class="hint">
+          在職缺卡片右上角按「隱藏」就會加進這份清單。用公司代碼比對,公司改名也擋得住。
+        </p>
+      </div>
+    </details>
 
     <div class="legend">
       <div><span class="chip good">✓ 3 天前</span><span>HR 七天內處理過履歷或回覆過應徵者</span></div>
@@ -94,6 +156,7 @@
       不請也沒關係,<a href="https://github.com/fansia/104-ghost-job-detector/issues" target="_blank" rel="noopener noreferrer">回報問題</a>幫助更大。
     </p>
 
+    <script src="util.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

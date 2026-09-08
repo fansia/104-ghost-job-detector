@@ -91,7 +91,14 @@
 .gjd-item--bad .gjd-k { color: #c08b8b; }
 .gjd-item--bad .gjd-v { color: #b32626; font-weight: 600; }
 
-/* 展開鈕:收在右上角,不另外佔一列 */
+/* 右上角的動作區:隱藏 + 說明 */
+.gjd-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .gjd-toggle {
   flex: none;
   display: flex;
@@ -109,6 +116,54 @@
 .gjd-toggle:hover { color: #4a4a4a; }
 
 .gjd-caret { font-size: 10px; }
+
+/* ---------- 被隱藏的卡片 ----------
+   整張從 DOM 抽掉會跟 104 的虛擬捲動搶節點,所以改成把卡片原本的內容藏起來、
+   只留這一行。留一行也才講得出「為什麼不見了」並讓人反悔。 */
+.gjd-card-hidden > *:not(.gjd-hidden-bar) { display: none !important; }
+
+.gjd-hidden-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  margin: 4px 0;
+  border: 1px dashed #dcdfe4;
+  border-radius: 6px;
+  background: #fafbfc;
+  color: #8b919b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.gjd-hidden-bar__text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gjd-hidden-bar__acts {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gjd-hidden-bar__btn {
+  padding: 0 2px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  color: #9aa0aa;
+}
+
+.gjd-hidden-bar__btn:hover { color: #222; }
+
+/* 「顯示」是順手的那顆,給它多一點份量;解除規則的那顆刻意低調 */
+.gjd-hidden-bar__btn--strong { color: #6b7280; text-decoration: underline; }
 
 .gjd-detail {
   padding: 0 10px 8px;
