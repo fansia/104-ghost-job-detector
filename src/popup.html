@@ -20,10 +20,16 @@
         border-top: 1px solid #eee;
       }
       .legend { margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
-      .legend div { display: flex; gap: 6px; align-items: center; margin-bottom: 3px; }
-      .dot { width: 10px; height: 10px; border-radius: 999px; flex: none; }
-      .g { background: #2f7d43; } .y { background: #8a6b12; }
-      .o { background: #a85b16; } .r { background: #b32626; }
+      .legend div { display: flex; gap: 7px; align-items: baseline; margin-bottom: 4px; }
+      .legend span:last-child { color: #666; font-size: 12px; }
+      /* 徽章上的三種標示,樣式跟 styles.css 對齊 */
+      .chip {
+        flex: none; padding: 0 5px; border-radius: 4px;
+        font-size: 12px; font-weight: 600; white-space: nowrap;
+      }
+      .chip.good { background: #e6f4ea; color: #1e7a3c; }
+      .chip.bad  { background: #fdecec; color: #b32626; }
+      .chip.em   { background: #e8ebef; color: #111; }
       button {
         font: inherit;
         padding: 4px 10px;
@@ -33,6 +39,12 @@
         cursor: pointer;
       }
       .note { margin-top: 10px; color: #999; font-size: 11px; }
+      .support {
+        margin: 10px 0 0; padding-top: 10px; border-top: 1px solid #eee;
+        color: #777; font-size: 11px; line-height: 1.7;
+      }
+      .support a { color: #2563eb; text-decoration: none; }
+      .support a:hover { text-decoration: underline; }
       .warn {
         margin-top: 10px;
         padding: 8px 10px;
@@ -67,14 +79,19 @@
     <div id="health" class="warn" hidden></div>
 
     <div class="legend">
-      <div><span class="dot g"></span>0–19 正常</div>
-      <div><span class="dot y"></span>20–39 留意</div>
-      <div><span class="dot o"></span>40–64 可疑</div>
-      <div><span class="dot r"></span>65+ 高風險</div>
+      <div><span class="chip good">✓ 3 天前</span><span>HR 七天內處理過履歷或回覆過應徵者</span></div>
+      <div><span class="chip bad">150 天前</span><span>這個缺刊登超過 60 天</span></div>
+      <div><span class="chip em">4 天前</span><span>刊登日期,換算成天數才好判斷</span></div>
     </div>
 
     <p class="note">
-      分數僅供參考,請以徽章展開後的原始數據為準。資料全部來自 104 網頁自己使用的內部 API,不會傳送到任何第三方。處理履歷與回覆都是 30 天的滾動紀錄,「無紀錄」是指這段期間內沒有,不是從來沒有;HR 若以電話或 email 聯絡,104 不會記錄,因此回覆狀況僅供參考、不列入計分。
+      這個外掛不評分、不分級,也不推論職缺真假 —— 顏色只是提示你多看一眼。資料全部來自 104 網頁自己使用的內部 API,不會傳送到任何第三方。處理履歷與回覆都是 30 天的滾動紀錄,「無紀錄」是指這段期間內沒有,不是從來沒有;HR 若直接打電話或寄 email 聯絡應徵者,104 不會記錄,這裡也就看不到。
+    </p>
+
+    <p class="support">
+      這個外掛免費、無廣告、不蒐集資料。覺得有用可以
+      <a href="https://buymeacoffee.com/ericyen" target="_blank" rel="noopener noreferrer">請我喝杯咖啡</a> ☕
+      不請也沒關係,<a href="https://github.com/fansia/104-ghost-job-detector/issues" target="_blank" rel="noopener noreferrer">回報問題</a>幫助更大。
     </p>
 
     <script src="popup.js"></script>
