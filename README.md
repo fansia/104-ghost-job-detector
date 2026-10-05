@@ -179,7 +179,7 @@ src/badge.js       徽章 UI
 src/content.js     頁面偵測、DOM 注入、虛擬捲動處理
 src/popup.html/js  開關與快取管理
 icons/             擴充功能圖示
-docs/              舊網址的轉址頁（網頁本體在 eric-yen.com，原始檔在 Eric 的 personal-os repo）；截圖仍是商店素材的來源
+docs/              GitHub Pages 安裝說明頁
 ```
 
 ### 幾個實作上的坑
