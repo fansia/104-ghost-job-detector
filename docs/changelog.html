@@ -780,6 +780,12 @@ figure.demo figcaption { color: var(--olive); font-size: 13.5px; margin-top: 8px
 }
 /* the separators between links sit inside the anchors; keep them un-underlined */
 .feature-links a:not(:last-child)::after, .product-foot .links a:not(:last-child)::after { display: inline-block; text-decoration: none; }
+/* scroll: sections rise in once; a thin reading-progress line on long pages */
+.rv { transition: opacity .55s ease, transform .55s cubic-bezier(.2,.7,.2,1); }
+.js-reveal .rv:not(.in) { opacity: 0; transform: translateY(14px); }
+.read-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: var(--brand); transform: scaleX(0); transform-origin: 0 50%; z-index: 50; pointer-events: none; opacity: .85; }
+@media (prefers-reduced-motion: reduce) { .rv { transition: none; } .js-reveal .rv:not(.in) { opacity: 1; transform: none; } }
+@media print { .js-reveal .rv:not(.in) { opacity: 1; transform: none; } .read-progress { display: none; } }
 </style>
 </head>
 <body>
@@ -955,6 +961,40 @@ document.querySelectorAll(".lang-switch a").forEach(function (a) {
     try { sessionStorage.setItem("turn", a.getAttribute("hreflang") === "en" ? "forward" : "back"); } catch (e) {}
   });
 });
+</script>
+<script>
+(() => {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+  const groups = ".features, .steps, .install, .milestones, .posts, .items, .tool-grid";
+  const targets = [...document.querySelectorAll("section, footer")].filter((el) => !el.parentElement.closest("section, footer"));
+  const vh = innerHeight;
+  const io = new IntersectionObserver((es) => es.forEach((e) => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add("in"); io.unobserve(e.target);
+  }), { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+  const below = (el) => el.getBoundingClientRect().top >= vh * 0.92;   // the first screen shows as is
+  for (const el of targets) {
+    [...(el.matches(groups) ? [el] : []), ...el.querySelectorAll(groups)].forEach((g) => [...g.children].filter(below).forEach((c, i) => {
+      c.classList.add("rv"); c.style.transitionDelay = Math.min(i, 5) * 80 + "ms"; io.observe(c);
+    }));
+    if (below(el)) { el.classList.add("rv"); io.observe(el); }
+  }
+  document.documentElement.classList.add("js-reveal");
+
+  const bar = document.createElement("div");
+  bar.className = "read-progress"; bar.setAttribute("aria-hidden", "true");
+  document.body.append(bar);
+  let ticking = false;
+  const update = () => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    bar.style.display = max > innerHeight ? "" : "none";
+    bar.style.transform = `scaleX(${max > 0 ? Math.min(scrollY / max, 1) : 0})`;
+    ticking = false;
+  };
+  addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  addEventListener("resize", update);
+  update();
+})();
 </script>
 </body>
 </html>
