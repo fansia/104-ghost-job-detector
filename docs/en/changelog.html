@@ -780,6 +780,18 @@ figure.demo figcaption { color: var(--olive); font-size: 13.5px; margin-top: 8px
 }
 /* the separators between links sit inside the anchors; keep them un-underlined */
 .feature-links a:not(:last-child)::after, .product-foot .links a:not(:last-child)::after { display: inline-block; text-decoration: none; }
+/* Header on narrow screens: one row when label + controls fit; otherwise the
+   controls (GitHub, language, theme) wrap together onto a second row. */
+@media (max-width: 720px) {
+  .eyebrow { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+  .eyebrow > span:first-child { flex: 0 1 auto; min-width: 0; max-width: 100%; }
+  .hero-links { display: flex; margin-left: auto; }
+  .eyebrow::after { content: none; }
+  .eyebrow .site-nav, .eyebrow .lang-switch, .eyebrow .theme-toggle, .hero-links > a { order: 0; }
+}
+@media (max-width: 480px) {
+  .eyebrow .lang-switch { margin-left: 6px; padding-left: 12px; border-left: 1px solid var(--border); }
+}
 /* scroll: sections rise in once; a thin reading-progress line on long pages */
 .rv { transition: opacity .55s ease, transform .55s cubic-bezier(.2,.7,.2,1); }
 .js-reveal .rv:not(.in) { opacity: 0; transform: translateY(14px); }
