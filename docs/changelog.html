@@ -797,6 +797,7 @@ figure.demo figcaption { color: var(--olive); font-size: 13.5px; margin-top: 8px
 .js-reveal .rv:not(.in) { opacity: 0; transform: translateY(14px); }
 .read-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: var(--brand); transform: scaleX(0); transform-origin: 0 50%; z-index: 50; pointer-events: none; opacity: .85; }
 @media (prefers-reduced-motion: reduce) { .rv { transition: none; } .js-reveal .rv:not(.in) { opacity: 1; transform: none; } }
+@media (max-width: 720px) { .read-progress { display: none; } }   /* phones: it floats over text and the OS has its own scroll bar */
 @media print { .js-reveal .rv:not(.in) { opacity: 1; transform: none; } .read-progress { display: none; } }
 </style>
 </head>
