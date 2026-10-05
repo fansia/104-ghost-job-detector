@@ -247,6 +247,10 @@ footer { display: flex; justify-content: space-between; gap: 48px; padding-top: 
 .colophon { text-align: right; }
 .colophon .links { justify-content: flex-end; }
 .ethos { font-style: italic; color: var(--olive); font-size: 14px; max-width: 600px; margin: 12px 0 0 auto; }
+.ethos { text-wrap: balance; }
+.ethos span { white-space: nowrap; }
+.ethos span:not(:last-child)::after { content: " /"; }
+@media (max-width: 360px) { .ethos span { white-space: normal; } }
 
 /* ========== Responsive ========== */
 @media (max-width: 880px) {
@@ -707,7 +711,7 @@ code { font-family: "JetBrains Mono", "SF Mono", ui-monospace, monospace; font-s
         <input id="sub-email" type="email" name="email" placeholder="你的 email" required autocomplete="email">
         <button class="btn-primary" type="submit">訂閱</button>
       </form>
-        <p class="sub-note">會開啟 Substack 確認訂閱，再按一次就完成。 · <a href="/">回 Eric Yen 個人首頁</a></p>
+        <p class="sub-note">會開啟 Substack 確認訂閱，再按一次就完成。</p>
       </div>
     </div>
   </section>

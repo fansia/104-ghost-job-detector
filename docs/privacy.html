@@ -241,6 +241,10 @@ footer { display: flex; justify-content: space-between; gap: 48px; padding-top: 
 .colophon { text-align: right; }
 .colophon .links { justify-content: flex-end; }
 .ethos { font-style: italic; color: var(--olive); font-size: 14px; max-width: 600px; margin: 12px 0 0 auto; }
+.ethos { text-wrap: balance; }
+.ethos span { white-space: nowrap; }
+.ethos span:not(:last-child)::after { content: " /"; }
+@media (max-width: 360px) { .ethos span { white-space: normal; } }
 
 /* ========== Responsive ========== */
 @media (max-width: 880px) {
@@ -750,6 +754,7 @@ figure.demo figcaption { color: var(--olive); font-size: 13.5px; margin-top: 8px
 .crumb a { color: var(--stone); }
 .crumb .sep { margin: 0 6px; color: var(--border); }
 .crumb [aria-current] { color: var(--dark-warm); }
+@media (max-width: 400px) { .crumb { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .crumb .sep { margin: 0 4px; } }
 @media (hover: hover) { .crumb a:hover { color: var(--brand); } }
 .site-nav { display: flex; align-items: center; gap: 18px; font-family: var(--latin-ui); font-size: 13px; font-weight: 500; text-transform: none; letter-spacing: .2px; }
 .site-nav a { color: var(--stone); }
