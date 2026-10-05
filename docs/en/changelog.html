@@ -3,7 +3,7 @@
      Product page for the tool, in the personal site Kami style. Shared parts (tokens, fonts,
      icons, theme toggle) are copied from the personal site index.html; everything under
      "Product page" in the stylesheet is the reusable product layer. -->
-<html lang="zh-Hant-TW">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <script>
@@ -44,20 +44,20 @@ addEventListener("pagereveal", function (e) {
   e.viewTransition.finished.finally(function () { delete root.dataset.turn; });
 });
 </script>
-<title>隱私權政策 · 幽靈職缺偵測器（104 非官方）</title>
+<title>Changelog · Ghost Job Detector (unofficial, for 104)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="本外掛不蒐集、不上傳任何資料。所有資料留在你自己的裝置上。">
-<meta property="og:title" content="隱私權政策 · 幽靈職缺偵測器（104 非官方）">
-<meta property="og:description" content="本外掛不蒐集、不上傳任何資料。所有資料留在你自己的裝置上。">
+<meta name="description" content="What each version added, and why.">
+<meta property="og:title" content="Changelog · Ghost Job Detector (unofficial, for 104)">
+<meta property="og:description" content="What each version added, and why.">
 <meta property="og:type" content="website">
-<meta property="og:locale" content="zh_TW">
-<link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="canonical" href="https://eric-yen.com/104-ghost-job-detector/privacy.html">
-<link rel="alternate" hreflang="zh-Hant" href="https://eric-yen.com/104-ghost-job-detector/privacy.html">
-<link rel="alternate" hreflang="en" href="https://eric-yen.com/104-ghost-job-detector/en/privacy.html">
-<link rel="alternate" hreflang="x-default" href="https://eric-yen.com/104-ghost-job-detector/privacy.html">
-<meta property="og:locale:alternate" content="en_US">
-<meta property="og:url" content="https://eric-yen.com/104-ghost-job-detector/privacy.html">
+<meta property="og:locale" content="en_US">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="canonical" href="https://eric-yen.com/104-ghost-job-detector/en/changelog.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://eric-yen.com/104-ghost-job-detector/changelog.html">
+<link rel="alternate" hreflang="en" href="https://eric-yen.com/104-ghost-job-detector/en/changelog.html">
+<link rel="alternate" hreflang="x-default" href="https://eric-yen.com/104-ghost-job-detector/changelog.html">
+<meta property="og:locale:alternate" content="zh_TW">
+<meta property="og:url" content="https://eric-yen.com/104-ghost-job-detector/en/changelog.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&display=swap" rel="stylesheet">
@@ -751,81 +751,75 @@ figure.demo figcaption { color: var(--olive); font-size: 13.5px; margin-top: 8px
 
   <header class="hero" style="padding-bottom:0;border-bottom:0;margin-bottom:40px">
     <div class="eyebrow">
-      <span class="crumb"><a href="./">← 幽靈職缺偵測器</a></span>
-      <nav class="hero-links"><a href="https://github.com/fansia/104-ghost-job-detector" aria-label="GitHub" title="GitHub"><svg class="ico"><use href="#i-github"/></svg></a><span class="lang-switch"><span aria-current="true" lang="zh-Hant">中文</span><a href="en/privacy.html" hreflang="en" lang="en">EN</a></span><button class="theme-toggle" type="button" aria-label="切換到深色" title="切換到深色"><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button></nav>
+      <span class="crumb"><a href="./">← Ghost Job Detector</a></span>
+      <nav class="hero-links"><a href="https://github.com/fansia/104-ghost-job-detector" aria-label="GitHub" title="GitHub"><svg class="ico"><use href="#i-github"/></svg></a><span class="lang-switch"><a href="../changelog.html" hreflang="zh-Hant" lang="zh-Hant">中文</a><span aria-current="true" lang="en">EN</span></span><button class="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button></nav>
     </div>
   </header>
-  <div class="doc-head"><h1>隱私權政策</h1><p class="lede">幽靈職缺偵測器（104 非官方）· 最後更新 2026-09-03</p></div>
+  <div class="doc-head"><h1>Changelog</h1><p class="lede">What each version added, and why. The badges below aren't screenshots: they're drawn live with the extension's own code and styles, so they show its real interface, which is in Chinese.</p></div>
   <div class="doc">
-<p>
-  「幽靈職缺偵測器(104 非官方)」(以下簡稱「本外掛」)是由第三方獨立開發的 Chrome 擴充功能,
-  與 104 資訊科技股份有限公司無任何隸屬或合作關係。
-</p>
+<section class="rel">
+  <div class="rel__head"><h2 class="rel__ver">v1.8.0</h2><span class="rel__date">2026-09-08</span><span class="rel__tag">New feature</span></div>
+  <p class="rel__lede">You can hide companies you never want to see again.</p>
+  <p>Almost every similar tool abroad has a hide feature, and complaints about 104 on Dcard center on "seeing the same companies over and over". This is the only place the extension "decides for you", but the decision is yours: the tool only remembers and carries it out. It never judges on its own which company should be hidden.</p>
+  <h3>① A "隱藏" (hide) button at the top right of the badge</h3>
+  <figure class="demo">
+    <div class="demo__stage"><div class="gjd-badge"><div class="gjd-top"><div class="gjd-data"><div class="gjd-items"><span class="gjd-item gjd-item--good"><span class="gjd-k">處理履歷</span><span class="gjd-v">✓ 3 天前</span></span><span class="gjd-item gjd-item--good"><span class="gjd-k">回覆應徵者</span><span class="gjd-v">✓ 1 天前</span></span><span class="gjd-item"><span class="gjd-k">應徵</span><span class="gjd-v">6 人</span></span><span class="gjd-item"><span class="gjd-k">重新刊登</span><span class="gjd-v">2 次</span></span><span class="gjd-item gjd-item--bad"><span class="gjd-k">刊登</span><span class="gjd-v">2026/07/02(68 天前)</span></span><span class="gjd-item"><span class="gjd-k">公司開缺</span><span class="gjd-v">12 個</span></span></div></div><div class="gjd-actions"><button class="gjd-toggle" title="不再顯示「範例科技股份有限公司」的職缺">隱藏</button><button class="gjd-toggle" title="這些數字怎麼來的、怎麼看"><span>說明</span><span class="gjd-caret">▾</span></button></div></div><div class="gjd-detail" hidden><ul class="gjd-notes"><li>資料來自 104 網頁自己使用的內部 API,僅供參考。</li><li>「處理履歷」與「回覆應徵者」都是 30 天的滾動紀錄 ——「無紀錄」是指這段期間內沒有,不是從來沒有。</li><li>HR 若直接打電話或寄 email 聯絡應徵者,104 不會記錄,這裡也就看不到。</li><li>「處理履歷」不一定是真人動作,系統自動配對可能也算在內。</li><li>「刊登」是 104 上的最後更新日期,不是最初刊登日。</li><li>綠色代表 HR 在七天內處理過履歷或回覆過應徵者;沒有綠色不代表有問題。</li><li>紅色代表這個缺掛了超過 60 天。但掛得久不等於是幽靈職缺 —— 實測這種缺有九成的 HR 七天內仍在處理履歷,多半是常年開缺(養人才庫、高流動率、條件開得硬)。</li><li>這個外掛不評分、不分級,也不推論職缺真假 —— 顏色只是提示你多看一眼,請自行斟酌。</li></ul></div></div></div>
+    <figcaption>It sits on this row instead of inside "說明" (details): people who hide usually clear out several companies at once, and one extra click is enough to make the feature disappear.</figcaption>
+  </figure>
+  <h3>② Press it and that company's listings fold into one line</h3>
+  <figure class="demo">
+    <div class="demo__stage"><div class="gjd-hidden-bar"><span class="gjd-hidden-bar__text">已隱藏:範例科技股份有限公司 — 你封鎖了這家公司</span><span class="gjd-hidden-bar__acts"><button class="gjd-hidden-bar__btn" title="解除規則:你封鎖了這家公司">解除封鎖</button><button class="gjd-hidden-bar__btn gjd-hidden-bar__btn--strong" title="這次先顯示出來,規則保留">顯示</button></span></div></div>
+    <figcaption>Not removed entirely. 104's search results use virtual scrolling, and pulling nodes out makes the scrollbar jump; and silently missing things are the hardest to debug. Leaving one line lets it say why, and lets you change your mind. <strong>解除封鎖</strong> (unblock) removes the rule; <strong>顯示</strong> (show) lets this one through just once.</figcaption>
+  </figure>
+  <h3>③ A card you let through gets a different button</h3>
+  <figure class="demo">
+    <div class="demo__stage"><div class="gjd-badge"><div class="gjd-top"><div class="gjd-data"><div class="gjd-items"><span class="gjd-item gjd-item--good"><span class="gjd-k">處理履歷</span><span class="gjd-v">✓ 3 天前</span></span><span class="gjd-item gjd-item--good"><span class="gjd-k">回覆應徵者</span><span class="gjd-v">✓ 1 天前</span></span><span class="gjd-item"><span class="gjd-k">應徵</span><span class="gjd-v">6 人</span></span><span class="gjd-item"><span class="gjd-k">重新刊登</span><span class="gjd-v">2 次</span></span><span class="gjd-item gjd-item--bad"><span class="gjd-k">刊登</span><span class="gjd-v">2026/07/02(68 天前)</span></span><span class="gjd-item"><span class="gjd-k">公司開缺</span><span class="gjd-v">12 個</span></span></div></div><div class="gjd-actions"><button class="gjd-toggle" title="解除:你封鎖了這家公司">解除隱藏</button><button class="gjd-toggle" title="這些數字怎麼來的、怎麼看"><span>說明</span><span class="gjd-caret">▾</span></button></div></div><div class="gjd-detail" hidden><ul class="gjd-notes"><li>資料來自 104 網頁自己使用的內部 API,僅供參考。</li><li>「處理履歷」與「回覆應徵者」都是 30 天的滾動紀錄 ——「無紀錄」是指這段期間內沒有,不是從來沒有。</li><li>HR 若直接打電話或寄 email 聯絡應徵者,104 不會記錄,這裡也就看不到。</li><li>「處理履歷」不一定是真人動作,系統自動配對可能也算在內。</li><li>「刊登」是 104 上的最後更新日期,不是最初刊登日。</li><li>綠色代表 HR 在七天內處理過履歷或回覆過應徵者;沒有綠色不代表有問題。</li><li>紅色代表這個缺掛了超過 60 天。但掛得久不等於是幽靈職缺 —— 實測這種缺有九成的 HR 七天內仍在處理履歷,多半是常年開缺(養人才庫、高流動率、條件開得硬)。</li><li>這個外掛不評分、不分級,也不推論職缺真假 —— 顏色只是提示你多看一眼,請自行斟酌。</li></ul></div></div></div>
+    <figcaption>This card matches a rule but is visible, so it was let through. Showing "隱藏" here would misreport the state: pressing it would do nothing and look broken.</figcaption>
+  </figure>
+  <h3>Also</h3>
+  <ul>
+    <li><strong>Hide listings I've applied to</strong>: needs you logged in to 104. Logged out, the data isn't available and the rule switches itself off rather than hiding the wrong things.</li>
+    <li><strong>"N hidden on this page"</strong>: shown in the toolbar menu. Without feedback, a filter just makes listings vanish and the tool looks broken.</li>
+    <li>Blocking uses the <strong>company code</strong>, not the name: renamed companies stay blocked, and different companies with the same name stay apart.</li>
+  </ul>
+  <h3>Deliberately not done: hiding promoted listings</h3>
+  <p class="muted">Promoted placement is a product 104 sells. A switch that filters out paid exposure is close to ad blocking and would give them a solid legal reason to object. This extension fills in information 104 doesn't show; it doesn't interfere with how 104 sells ads.</p>
+</section>
 
-<h2>我們不蒐集任何資料</h2>
-<div class="note">
-  <p style="margin:0 0 10px">
-    本外掛<strong>不會蒐集、儲存或傳輸任何個人資料</strong>到開發者或任何第三方伺服器。
-    開發者沒有任何伺服器,也沒有任何管道取得你的使用紀錄。
-  </p>
-  <p class="muted" style="margin:0">具體而言,本外掛不蒐集:個人身分識別資訊(姓名、電子郵件、地址、年齡、
-    身分證字號等)、健康資訊、財務與付款資訊、帳號認證資訊(帳號、密碼、Cookie、Token)、
-    個人通訊內容、地理位置、網頁瀏覽紀錄,以及使用者活動追蹤(點擊、滑鼠移動、按鍵)。</p>
-</div>
+<section class="rel">
+  <div class="rel__head"><h2 class="rel__ver">v1.7.1</h2><span class="rel__date">2026-09-08</span><span class="rel__tag">Fix</span></div>
+  <p class="rel__lede">The toolbar menu still showed the previous version's grade table, which was wrong.</p>
+  <p>The menu said <code>0–19 正常</code> / <code>20–39 留意</code> / <code>40–64 可疑</code> / <code>65+ 高風險</code> (normal / watch / suspicious / high risk) and "scores are for reference only", but that whole system was removed in v1.7.0. Anyone opening the icon saw a feature that no longer existed. It now shows the three cues that actually appear on the badge.</p>
+  <p class="muted">The same version added a Buy Me a Coffee link at the bottom of the menu, not on the job cards.</p>
+</section>
 
-<h2>資料如何流動</h2>
-<p>
-  本外掛在你的瀏覽器中,以你自己的身分向 104 人力銀行的內部 JSON API 發出請求
-  (即 104 網頁自己載入職缺時就會呼叫的端點,非 104 官方對外開放、需申請金鑰的 API),
-  取得職缺的公開統計欄位(HR 處理履歷時間、回覆應徵者時間、應徵人數等),並將結果顯示在 104 的頁面上。
-</p>
-<p>
-  這些請求是<strong>同源請求</strong>,直接由你的瀏覽器送到 <code>www.104.com.tw</code>,
-  不經過任何中介伺服器。開發者看不到這些請求,也看不到回應內容。
-</p>
-
-<h2>本機儲存</h2>
-<p>本外掛使用 <code>chrome.storage.local</code> 在<strong>你自己的電腦上</strong>儲存三類資料:</p>
-<div class="tbl-wrap">
-<table class="table">
-  <tr><th>資料</th><th>用途</th><th>保存期間</th></tr>
-  <tr><td>搜尋結果與職缺內頁快取</td><td>避免重複請求同一個職缺,減少對 104 的負擔</td><td>5 分鐘後失效</td></tr>
-  <tr><td>應徵人數快取</td><td>同上</td><td>1 小時後失效</td></tr>
-  <tr><td>公司職缺快取</td><td>同上</td><td>6 小時後失效</td></tr>
-  <tr><td>職缺觀察紀錄</td><td>記錄某個職缺被重新刊登過幾次</td><td>直到你手動清除</td></tr>
-</table>
-</div>
-<p class="muted" style="margin-top:14px">
-  這些資料<strong>永遠不會離開你的裝置</strong>。你可以隨時從擴充功能的彈出視窗點「清除」一次刪除全部。
-  移除本外掛時,Chrome 也會一併刪除。
-</p>
-
-<h2>權限說明</h2>
-<div class="tbl-wrap">
-<table class="table">
-  <tr><th>權限</th><th>為什麼需要</th></tr>
-  <tr><td><code>storage</code></td><td>在本機存放上述快取與觀察紀錄</td></tr>
-  <tr><td><code>https://www.104.com.tw/*</code></td><td>在 104 的職缺頁面上注入徽章,並向 104 網頁自己使用的內部 API 查詢職缺資料</td></tr>
-</table>
-</div>
-<p class="muted" style="margin-top:14px">本外掛不要求任何其他權限,也不會在 104 以外的任何網站上執行。</p>
-
-<h2>程式碼公開</h2>
-<p>
-  本外掛完整原始碼以 MIT 授權公開,任何人都可以檢視、稽核與自行建置。上架版本與原始碼一致:
-  <a href="https://github.com/fansia/104-ghost-job-detector">github.com/fansia/104-ghost-job-detector</a>
-</p>
-
-<h2>變更與聯絡</h2>
-<p>
-  本政策若有變更,會更新本頁面並修改上方的「最後更新」日期。
-  對隱私權有任何疑問,請至
-  <a href="https://github.com/fansia/104-ghost-job-detector/issues">GitHub Issues</a> 提出。
-</p>
-
+<section class="rel">
+  <div class="rel__head"><h2 class="rel__ver">v1.7.0</h2><span class="rel__date">2026-09-05</span><span class="rel__tag">Major change</span></div>
+  <p class="rel__lede">No more scores. The 0–100 score and four grades are gone.</p>
+  <figure class="demo">
+    <span class="demo__label">What it looks like now</span>
+    <div class="demo__stage"><div class="gjd-badge"><div class="gjd-top"><div class="gjd-data"><div class="gjd-items"><span class="gjd-item gjd-item--good"><span class="gjd-k">處理履歷</span><span class="gjd-v">✓ 3 天前</span></span><span class="gjd-item gjd-item--good"><span class="gjd-k">回覆應徵者</span><span class="gjd-v">✓ 1 天前</span></span><span class="gjd-item"><span class="gjd-k">應徵</span><span class="gjd-v">6 人</span></span><span class="gjd-item"><span class="gjd-k">重新刊登</span><span class="gjd-v">2 次</span></span><span class="gjd-item gjd-item--bad"><span class="gjd-k">刊登</span><span class="gjd-v">2026/07/02(68 天前)</span></span><span class="gjd-item"><span class="gjd-k">公司開缺</span><span class="gjd-v">12 個</span></span></div></div><div class="gjd-actions"><button class="gjd-toggle" title="這些數字怎麼來的、怎麼看"><span>說明</span><span class="gjd-caret">▾</span></button></div></div><div class="gjd-detail" hidden><ul class="gjd-notes"><li>資料來自 104 網頁自己使用的內部 API,僅供參考。</li><li>「處理履歷」與「回覆應徵者」都是 30 天的滾動紀錄 ——「無紀錄」是指這段期間內沒有,不是從來沒有。</li><li>HR 若直接打電話或寄 email 聯絡應徵者,104 不會記錄,這裡也就看不到。</li><li>「處理履歷」不一定是真人動作,系統自動配對可能也算在內。</li><li>「刊登」是 104 上的最後更新日期,不是最初刊登日。</li><li>綠色代表 HR 在七天內處理過履歷或回覆過應徵者;沒有綠色不代表有問題。</li><li>紅色代表這個缺掛了超過 60 天。但掛得久不等於是幽靈職缺 —— 實測這種缺有九成的 HR 七天內仍在處理履歷,多半是常年開缺(養人才庫、高流動率、條件開得硬)。</li><li>這個外掛不評分、不分級,也不推論職缺真假 —— 顏色只是提示你多看一眼,請自行斟酌。</li></ul></div></div></div>
+    <figcaption>All the data shows while collapsed; "說明" (details) only adds explanatory notes, no extra data.</figcaption>
+  </figure>
+  <p>They were removed not for lack of data, but because a test on 1,039 listings didn't support the deductions:</p>
+  <ul>
+    <li>For listings up more than 60 days, <strong>89.7%</strong> still had HR processing résumés within the week; the three over 180 days were <strong>100%</strong>. Long-running listings are mostly always-open roles (building a talent pool, high turnover, tough requirements), not ghost jobs.</li>
+    <li>The batch flagged "no activity in 30 days" had a median posting age of just <strong>1 day</strong>: new listings nobody had applied to yet, not ignored ones.</li>
+    <li>After 104 removed its HR activity field, the highest measured score was 30, while "suspicious" started at 40: the top two grades could never happen.</li>
+    <li>The green "opportunity" badge appeared on <strong>33.3%</strong> of listings. One in three being an "opportunity" says nothing.</li>
+  </ul>
+  <p class="muted">Flagging a real job as fake hurts job seekers and companies alike. Thresholds set by gut feeling can't get this right, so it now shows only the data and leaves the judgement to you.</p>
+  <h3>Same version</h3>
+  <ul>
+    <li><strong>Exact applicant counts are back</strong>: 104 shows a band like "6–10"; this shows "6".</li>
+    <li><strong>The badge on job pages works again</strong>: 104's redesign moved the mount point and the job page had shown nothing.</li>
+    <li>Removed the store review prompt and its usage counter. Locally it now keeps only the API cache and listing observations, with no counts of any kind.</li>
+  </ul>
+  <p class="muted">This version was also taken off the Chrome Web Store; see <a href="./#install">installing</a> for why.</p>
+</section>
   </div>
 
-  <footer class="product-foot" style="margin-top:64px"><p class="links"><a href="./">幽靈職缺偵測器</a><a href="changelog.html">版本紀錄</a><a href="privacy.html">隱私權政策</a><a href="https://github.com/fansia/104-ghost-job-detector/releases">GitHub Releases</a><span>MIT 授權開源</span></p><p class="credit">與 104 資訊科技股份有限公司無隸屬關係。 · 設計風格參考 <a href="https://kami.tw93.fun">Kami</a></p></footer>
+  <footer class="product-foot" style="margin-top:64px"><p class="links"><a href="./">Ghost Job Detector</a><a href="changelog.html">Changelog</a><a href="privacy.html">Privacy</a><a href="https://github.com/fansia/104-ghost-job-detector/releases">GitHub Releases</a><span>MIT licensed</span></p><p class="credit">Not affiliated with 104 Corporation. · Design inspired by <a href="https://kami.tw93.fun">Kami</a></p></footer>
 
 </div>
 <script>
@@ -835,7 +829,7 @@ figure.demo figcaption { color: var(--olive); font-size: 13.5px; margin-top: 8px
     return root.dataset.theme === "dark";  /* light unless the reader chose dark */
   };
   var label = function () {
-    var t = isDark() ? "切換到淺色" : "切換到深色";
+    var t = isDark() ? "Switch to light theme" : "Switch to dark theme";
     btn.setAttribute("aria-label", t); btn.title = t; btn.setAttribute("aria-pressed", String(isDark()));
   };
   label();
