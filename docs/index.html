@@ -18,6 +18,7 @@ if (location.hostname === "fansia.github.io") location.replace("https://eric-yen
 <meta property="og:title" content="幽靈職缺偵測器（104 非官方）">
 <meta property="og:description" content="投了履歷沒回音，不一定是你不夠好，有可能那個缺根本沒人在看。">
 <meta property="og:image" content="https://eric-yen.com/104-ghost-job-detector/icon256.png">
+<meta name="twitter:card" content="summary">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="zh_TW">
 <link rel="icon" type="image/png" href="icon256.png">
@@ -29,10 +30,25 @@ if (location.hostname === "fansia.github.io") location.replace("https://eric-yen
 <meta property="og:locale:alternate" content="en_US">
 <meta property="og:url" content="https://eric-yen.com/104-ghost-job-detector/">
 <script type="application/ld+json">
-{ "@context": "https://schema.org", "@type": "SoftwareApplication", "name": "幽靈職缺偵測器（104 非官方）",
-  "applicationCategory": "BrowserApplication", "operatingSystem": "Chrome, Edge, Chromium",
-  "softwareVersion": "1.8.0", "offers": { "@type": "Offer", "price": "0", "priceCurrency": "TWD" },
-  "author": { "@type": "Person", "name": "Eric Yen", "url": "https://eric-yen.com/" } }
+{
+ "@context": "https://schema.org",
+ "@type": "SoftwareApplication",
+ "name": "幽靈職缺偵測器（104 非官方）",
+ "applicationCategory": "BrowserApplication",
+ "operatingSystem": "Chrome, Edge, Chromium",
+ "softwareVersion": "1.8.0",
+ "offers": {
+  "@type": "Offer",
+  "price": "0",
+  "priceCurrency": "TWD"
+ },
+ "author": {
+  "@type": "Person",
+  "@id": "https://eric-yen.com/#eric",
+  "name": "Eric Yen",
+  "url": "https://eric-yen.com/"
+ }
+}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -69,6 +85,64 @@ code { font-family: "JetBrains Mono", "SF Mono", ui-monospace, monospace; font-s
 @media (max-width: 880px) { .marks { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 480px) { .install > li { padding-left: 38px; } }
 </style>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "inLanguage": "zh-Hant",
+ "url": "https://eric-yen.com/104-ghost-job-detector/",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "\"開發人員模式\"被關掉了",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "這是最常見的原因。手動安裝的擴充功能靠它才能執行，安裝完把它關掉，外掛就會一起被停用。到 chrome://extensions/ 確認右上角的開關是開的。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "安裝後沒有重新整理 104 的頁面",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "外掛只會在頁面載入時注入，已經開著的分頁要重新整理一次。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "頁面不在支援範圍內",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "目前只在 104 的搜尋結果、AI 推薦、職缺內頁和公司頁運作，其他頁面（例如首頁、履歷管理）不會有徽章。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "外掛被自己關掉了",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "點瀏覽器工具列上的外掛圖示，確認\"啟用偵測\"是開的。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Chrome 啟動時跳出\"停用開發人員模式的擴充功能\"",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "點\"保留\"，不要點停用。"
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "徽章寫著\"無法取得資料\"或\"資料格式可能已變更\"",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "那多半是 104 改版了。外掛的彈出視窗會顯示連續失敗的次數，麻煩到 GitHub Issues 回報。"
+   }
+  }
+ ]
+}
+</script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
