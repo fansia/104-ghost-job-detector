@@ -14,9 +14,9 @@ if (location.hostname === "fansia.github.io") location.replace("https://eric-yen
 <script src="/assets/site-head.js"></script>
 <title>幽靈職缺偵測器（104 非官方）· Eric Yen</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="在 104 人力銀行的職缺上，把 104 手上有、但頁面上不顯示的那半邊數據直接印出來。免費、開源、不蒐集任何資料。">
+<meta name="description" content="2026-10 起暫停開發，不再提供下載；已經安裝的人建議移除。這個外掛曾在 104 人力銀行的職缺上，把 104 手上有、但頁面上不顯示的那半邊數據印出來。">
 <meta property="og:title" content="幽靈職缺偵測器（104 非官方）">
-<meta property="og:description" content="投了履歷沒回音，不一定是你不夠好，有可能那個缺根本沒人在看。">
+<meta property="og:description" content="2026-10 起暫停開發，不再提供下載。已經安裝的人建議移除。">
 <meta property="og:image" content="https://eric-yen.com/104-ghost-job-detector/icon256.png">
 <meta name="twitter:card" content="summary">
 <meta property="og:type" content="website">
@@ -37,11 +37,6 @@ if (location.hostname === "fansia.github.io") location.replace("https://eric-yen
  "applicationCategory": "BrowserApplication",
  "operatingSystem": "Chrome, Edge, Chromium",
  "softwareVersion": "1.8.0",
- "offers": {
-  "@type": "Offer",
-  "price": "0",
-  "priceCurrency": "TWD"
- },
  "author": {
   "@type": "Person",
   "@id": "https://eric-yen.com/#eric",
@@ -82,67 +77,14 @@ code { font-family: "JetBrains Mono", "SF Mono", ui-monospace, monospace; font-s
 .product-foot { display: block; }
 .product-foot .links { font-family: var(--latin-ui); font-size: 13px; color: var(--stone); margin: 0 0 6px; }
 .product-foot .links a:not(:last-child)::after { content: "・"; color: var(--stone); margin: 0 4px; }
+.paused { background: var(--ivory); border: 1px solid var(--border); border-left: 4px solid var(--brand); border-radius: 8px; padding: 18px 20px; margin: 0 0 32px; color: var(--dark-warm); font-size: 15.5px; line-height: 1.75; }
+.paused p { margin: 0 0 8px; }
+.paused p:last-child { margin-bottom: 0; }
+.paused b { color: var(--near-black); font-weight: 600; }
+.paused .paused-title { font-size: 19px; color: var(--near-black); font-weight: 600; }
 @media (max-width: 880px) { .marks { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 480px) { .install > li { padding-left: 38px; } }
 </style>
-<script type="application/ld+json">
-{
- "@context": "https://schema.org",
- "@type": "FAQPage",
- "inLanguage": "zh-Hant",
- "url": "https://eric-yen.com/104-ghost-job-detector/",
- "mainEntity": [
-  {
-   "@type": "Question",
-   "name": "\"開發人員模式\"被關掉了",
-   "acceptedAnswer": {
-    "@type": "Answer",
-    "text": "這是最常見的原因。手動安裝的擴充功能靠它才能執行，安裝完把它關掉，外掛就會一起被停用。到 chrome://extensions/ 確認右上角的開關是開的。"
-   }
-  },
-  {
-   "@type": "Question",
-   "name": "安裝後沒有重新整理 104 的頁面",
-   "acceptedAnswer": {
-    "@type": "Answer",
-    "text": "外掛只會在頁面載入時注入，已經開著的分頁要重新整理一次。"
-   }
-  },
-  {
-   "@type": "Question",
-   "name": "頁面不在支援範圍內",
-   "acceptedAnswer": {
-    "@type": "Answer",
-    "text": "目前只在 104 的搜尋結果、AI 推薦、職缺內頁和公司頁運作，其他頁面（例如首頁、履歷管理）不會有徽章。"
-   }
-  },
-  {
-   "@type": "Question",
-   "name": "外掛被自己關掉了",
-   "acceptedAnswer": {
-    "@type": "Answer",
-    "text": "點瀏覽器工具列上的外掛圖示，確認\"啟用偵測\"是開的。"
-   }
-  },
-  {
-   "@type": "Question",
-   "name": "Chrome 啟動時跳出\"停用開發人員模式的擴充功能\"",
-   "acceptedAnswer": {
-    "@type": "Answer",
-    "text": "點\"保留\"，不要點停用。"
-   }
-  },
-  {
-   "@type": "Question",
-   "name": "徽章寫著\"無法取得資料\"或\"資料格式可能已變更\"",
-   "acceptedAnswer": {
-    "@type": "Answer",
-    "text": "那多半是 104 改版了。外掛的彈出視窗會顯示連續失敗的次數，麻煩到 GitHub Issues 回報。"
-   }
-  }
- ]
-}
-</script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -161,16 +103,24 @@ code { font-family: "JetBrains Mono", "SF Mono", ui-monospace, monospace; font-s
       <span class="crumb"><a href="/">Eric Yen</a><span class="sep">/</span><a href="/products/">產品</a><span class="sep">/</span><span aria-current="page">幽靈職缺偵測器</span></span>
       <nav class="hero-links"><a href="https://github.com/fansia/104-ghost-job-detector" aria-label="GitHub" title="GitHub"><svg class="ico"><use href="#i-github"/></svg></a><span class="lang-switch"><span aria-current="true" lang="zh-Hant">中文</span><a href="en/" hreflang="en" lang="en">EN</a></span><button class="theme-toggle" type="button" aria-label="切換到深色" title="切換到深色"><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button></nav>
     </div>
+    <div class="paused" role="note" id="paused">
+      <p class="paused-title">⏸ 2026-10 起暫停開發。</p>
+      <p>104 的會員規約（2026 年 9 月修訂）限制使用非官方的自動化工具，也限制把平台內容拿去做衍生服務。為了不讓使用者的 104 帳號因為這個外掛受影響，我決定暫停開發，也不再提供下載。</p>
+      <p><b>已經安裝的人：建議移除。</b>到 <code>chrome://extensions/</code> 找到"幽靈職缺偵測器"，按"移除"即可。</p>
+      <p>原始碼仍以 MIT 授權保留在 <a href="https://github.com/fansia/104-ghost-job-detector">GitHub</a>。謝謝每一位用過、回報過問題的人。</p>
+    </div>
     <div class="product-title"><img src="icon256.png" alt="" width="76" height="76"><h1 class="product">幽靈職缺偵測器</h1></div>
     <p class="tagline product">投了履歷沒回音，不一定是你不夠好，有可能那個缺根本沒人在看。</p>
     <p class="hero-sub">在 104 人力銀行的職缺上，把 104 手上有、但頁面上不顯示的那半邊數據直接印出來。</p>
-    <div class="hero-tokens"><span>免費</span><span>開源</span><span>不蒐集任何資料</span><span>v1.8.0</span></div>
+    <div class="hero-tokens"><span>免費</span><span>開源</span><span>不蒐集任何資料</span><span>已暫停開發</span><span>最後一版 v1.8.0</span></div>
     <div class="hero-cta">
-      <a class="btn-primary" href="https://github.com/fansia/104-ghost-job-detector/releases/latest">下載最新版</a>
-      <a class="btn-ghost" href="#install">怎麼安裝</a>
+      <a class="btn-primary" href="#remove">怎麼移除</a>
+      <a class="btn-ghost" href="changelog.html">版本紀錄</a>
     </div>
     <p class="disclaimer">第三方獨立開發，非 104 人力銀行官方產品。</p>
   </header>
+
+  <p class="section-lede" style="margin:0 0 18px"><b>以下是暫停開發前（最後一版 v1.8.0）的介紹，留作紀錄。</b>外掛已不再提供下載，文中描述的是它當時的行為。</p>
 
   <figure class="gallery">
     <div class="shot"><img src="screenshot.png" alt="104 搜尋結果頁的兩張職缺卡片，各多出一列數據：處理履歷、回覆應徵者、應徵人數、刊登日期、公司開缺" width="2260" height="1042"></div>
@@ -222,54 +172,20 @@ code { font-family: "JetBrains Mono", "SF Mono", ui-monospace, monospace; font-s
     <p class="manifesto-src" style="margin-top:18px">憑感覺訂的門檻做不到這件事，所以現在只呈現數據，判斷交給使用者。<a href="https://github.com/fansia/104-ghost-job-detector#為什麼不評分">完整分析 →</a></p>
   </section>
 
-  <section id="install">
-    <p class="section-num">04 · 安裝</p>
-    <h2 class="section-title">手動安裝，五步</h2>
-    <div class="note"><b>目前沒有上架 Chrome 線上應用程式商店。</b>104 這陣子一直在調整內部 API 的資料格式，而商店每次改版都要重新送審、審查通常要數週。與其讓商店上永遠掛著一個過時、甚至已經失效的版本，不如先只走手動安裝：程式碼公開、隨時可以更新。</div>
+  <section id="remove">
+    <p class="section-num">04 · 怎麼移除</p>
+    <h2 class="section-title">已經安裝的人：建議移除</h2>
     <ol class="install">
-      <li><h3>下載並解壓縮</h3><p>到<a href="https://github.com/fansia/104-ghost-job-detector/releases/latest">最新版本頁面</a>下載 <code>ghost-job-detector-x.y.z.zip</code>，解壓縮到一個<b>你不會刪掉</b>的資料夾。Chrome 之後每次啟動都會去那個位置讀，資料夾搬走或刪掉，外掛就會失效。</p></li>
-      <li><h3>打開擴充功能頁面</h3><p>在 Chrome 網址列輸入 <code>chrome://extensions/</code> 後按 Enter。</p></li>
-      <li><h3>打開右上角的"開發人員模式"</h3><p><b>裝好之後也要保持開啟</b>，關掉它，這個外掛會被 Chrome 一起停用。這是"裝了但沒反應"最常見的原因。</p><img src="install-1-devmode.png" alt="Chrome 擴充功能頁右上角的開發人員模式開關" loading="lazy"></li>
-      <li><h3>點"載入未封裝項目"，選第 1 步的資料夾</h3><p>這個按鈕只有在開發人員模式打開後才會出現。選資料夾時要選含有 <code>manifest.json</code> 的那一層，不是它的上層。</p><img src="install-2-load-unpacked.png" alt="載入未封裝項目按鈕" loading="lazy"><img class="narrow" src="install-3-installed.png" alt="安裝完成後出現在清單上的外掛卡片" loading="lazy"></li>
-      <li><h3>到 104 搜尋任何職缺</h3><p>到 <a href="https://www.104.com.tw/jobs/search/">104 找工作</a> 搜尋，每張職缺卡片上會多出一列數據。安裝前就開著的 104 分頁，記得重新整理。</p></li>
+      <li><h3>打開擴充功能頁面</h3><p>在 Chrome 網址列輸入 <code>chrome://extensions/</code> 後按 Enter。Edge、Brave 等瀏覽器請到各自的擴充功能頁（例如 <code>edge://extensions/</code>）。</p></li>
+      <li><h3>找到"幽靈職缺偵測器"，按"移除"</h3><p>Chrome 會再問一次，確認移除即可。外掛存在本機的資料（快取、觀察紀錄、隱藏規則）會一起被清掉，不需要另外處理。</p><img class="narrow" src="install-3-installed.png" alt="擴充功能頁上的外掛卡片，左下方有移除（Remove）按鈕" loading="lazy"></li>
+      <li><h3>（可選）刪掉當初解壓縮的資料夾</h3><p>手動安裝時解壓縮的那個資料夾，外掛移除後就用不到了，可以直接刪掉。</p></li>
     </ol>
-    <p class="section-lede" style="margin:8px 0 10px"><b>有新版時：</b>下載新版 zip，解壓縮覆蓋掉原本那個資料夾（位置不要換），再到 <code>chrome://extensions/</code> 點外掛卡片上的重新載入，然後重新整理 104 的分頁。</p>
-    <img class="narrow" src="install-4-reload.png" alt="外掛卡片上的重新載入圖示" loading="lazy" style="display:block;max-width:424px;width:100%;border:1px solid var(--border);border-radius:6px">
   </section>
 
-  <section id="env">
-    <p class="section-num">05 · 支援環境</p>
-    <h2 class="section-title">決定的是瀏覽器，不是作業系統</h2>
-    <table class="table">
-      <thead><tr><th>環境</th><th>支援</th><th>說明</th></tr></thead>
-      <tbody>
-        <tr><td>Chrome（桌面版）</td><td>✅</td><td>macOS、Windows、Linux 都可以</td></tr>
-        <tr><td>Edge、Brave、Vivaldi</td><td>✅</td><td>同為 Chromium 核心，安裝方式相同</td></tr>
-        <tr><td>Firefox、Safari</td><td>❌</td><td>擴充功能格式不同，目前沒有對應版本</td></tr>
-        <tr><td>手機／平板</td><td>❌</td><td>Android 與 iOS 版 Chrome 都不支援擴充功能，是瀏覽器本身的限制</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section id="faq" class="faq">
-    <p class="section-num">06 · 裝了但沒反應？</p>
-    <h2 class="section-title">依照最常見的順序檢查</h2>
-    <details><summary>"開發人員模式"被關掉了</summary><p>這是最常見的原因。手動安裝的擴充功能靠它才能執行，安裝完把它關掉，外掛就會一起被停用。到 <code>chrome://extensions/</code> 確認右上角的開關是開的。</p></details>
-    <details><summary>安裝後沒有重新整理 104 的頁面</summary><p>外掛只會在頁面載入時注入，已經開著的分頁要重新整理一次。</p></details>
-    <details><summary>頁面不在支援範圍內</summary><p>目前只在 104 的搜尋結果、AI 推薦、職缺內頁和公司頁運作，其他頁面（例如首頁、履歷管理）不會有徽章。</p></details>
-    <details><summary>外掛被自己關掉了</summary><p>點瀏覽器工具列上的外掛圖示，確認"啟用偵測"是開的。</p></details>
-    <details><summary>Chrome 啟動時跳出"停用開發人員模式的擴充功能"</summary><p>點"保留"，不要點停用。</p></details>
-    <details><summary>徽章寫著"無法取得資料"或"資料格式可能已變更"</summary><p>那多半是 104 改版了。外掛的彈出視窗會顯示連續失敗的次數，麻煩到 <a href="https://github.com/fansia/104-ghost-job-detector/issues">GitHub Issues</a> 回報。</p></details>
-  </section>
-
-  <section id="support">
-    <p class="section-num">07 · 覺得有用的話</p>
-    <p class="manifesto">這個外掛是免費的，也會一直免費：沒有付費版、沒有廣告、不蒐集任何資料。如果它幫你少投了幾個已讀不回的缺，可以請我喝杯咖啡。</p>
-    <p class="manifesto-src">不請也完全沒關係。真的想幫忙的話，回報問題或把它分享給正在找工作的朋友，對這個專案的幫助其實更大。</p>
-    <div class="support">
-      <a class="btn-primary" href="https://buymeacoffee.com/ericyen">☕ 請我喝杯咖啡</a>
-      <a class="btn-ghost" href="https://github.com/fansia/104-ghost-job-detector/issues">回報問題</a>
-    </div>
+  <section id="thanks">
+    <p class="section-num">05 · 謝謝</p>
+    <p class="manifesto">謝謝每一位用過、回報過問題的人。</p>
+    <p class="manifesto-src">原始碼仍以 MIT 授權保留在 <a href="https://github.com/fansia/104-ghost-job-detector">GitHub</a>，"為什麼不評分"的完整分析與實作紀錄都在 README。</p>
   </section>
 
   <section id="maker">

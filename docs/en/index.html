@@ -14,9 +14,9 @@ if (location.hostname === "fansia.github.io") location.replace("https://eric-yen
 <script src="/assets/site-head.js"></script>
 <title>Ghost Job Detector (unofficial, for 104) · Eric Yen</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="On 104, Taiwan's largest job board, it prints the half of the data 104 has but never shows. Free, open source, collects no data.">
+<meta name="description" content="Development paused from October 2026; no longer available for download. If you have it installed, we recommend removing it. It printed the half of the data 104 has but never shows.">
 <meta property="og:title" content="Ghost Job Detector (unofficial, for 104)">
-<meta property="og:description" content="No reply to your application doesn't mean you weren't good enough. Maybe nobody was reading.">
+<meta property="og:description" content="Development paused from October 2026; no longer available for download. If you have it installed, we recommend removing it.">
 <meta property="og:image" content="https://eric-yen.com/104-ghost-job-detector/icon256.png">
 <meta name="twitter:card" content="summary">
 <meta property="og:type" content="website">
@@ -37,11 +37,6 @@ if (location.hostname === "fansia.github.io") location.replace("https://eric-yen
  "applicationCategory": "BrowserApplication",
  "operatingSystem": "Chrome, Edge, Chromium",
  "softwareVersion": "1.8.0",
- "offers": {
-  "@type": "Offer",
-  "price": "0",
-  "priceCurrency": "TWD"
- },
  "author": {
   "@type": "Person",
   "@id": "https://eric-yen.com/#eric",
@@ -82,67 +77,14 @@ code { font-family: "JetBrains Mono", "SF Mono", ui-monospace, monospace; font-s
 .product-foot { display: block; }
 .product-foot .links { font-family: var(--latin-ui); font-size: 13px; color: var(--stone); margin: 0 0 6px; }
 .product-foot .links a:not(:last-child)::after { content: "・"; color: var(--stone); margin: 0 4px; }
+.paused { background: var(--ivory); border: 1px solid var(--border); border-left: 4px solid var(--brand); border-radius: 8px; padding: 18px 20px; margin: 0 0 32px; color: var(--dark-warm); font-size: 15.5px; line-height: 1.75; }
+.paused p { margin: 0 0 8px; }
+.paused p:last-child { margin-bottom: 0; }
+.paused b { color: var(--near-black); font-weight: 600; }
+.paused .paused-title { font-size: 19px; color: var(--near-black); font-weight: 600; }
 @media (max-width: 880px) { .marks { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 480px) { .install > li { padding-left: 38px; } }
 </style>
-<script type="application/ld+json">
-{
- "@context": "https://schema.org",
- "@type": "FAQPage",
- "inLanguage": "en",
- "url": "https://eric-yen.com/104-ghost-job-detector/en/",
- "mainEntity": [
-  {
-   "@type": "Question",
-   "name": "Developer mode got turned off",
-   "acceptedAnswer": {
-    "@type": "Answer",
-    "text": "The most common cause. Manually installed extensions only run with it on. Check the switch at the top right of chrome://extensions/."
-   }
-  },
-  {
-   "@type": "Question",
-   "name": "The 104 tab wasn't reloaded after installing",
-   "acceptedAnswer": {
-    "@type": "Answer",
-    "text": "The extension only loads when a page loads; reload tabs that were already open."
-   }
-  },
-  {
-   "@type": "Question",
-   "name": "The page isn't supported",
-   "acceptedAnswer": {
-    "@type": "Answer",
-    "text": "It works on 104's search results, AI recommendations, job pages and company pages. Other pages (home, résumé management) get no badge."
-   }
-  },
-  {
-   "@type": "Question",
-   "name": "The extension is switched off",
-   "acceptedAnswer": {
-    "@type": "Answer",
-    "text": "Click its icon in the toolbar and make sure detection is on."
-   }
-  },
-  {
-   "@type": "Question",
-   "name": "Chrome asks to \"Disable developer mode extensions\" on start",
-   "acceptedAnswer": {
-    "@type": "Answer",
-    "text": "Click \"Keep\", not disable."
-   }
-  },
-  {
-   "@type": "Question",
-   "name": "The badge says data is unavailable or the format may have changed",
-   "acceptedAnswer": {
-    "@type": "Answer",
-    "text": "104 has probably changed something. The popup shows how many times in a row it failed; please report it on GitHub Issues."
-   }
-  }
- ]
-}
-</script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -161,16 +103,24 @@ code { font-family: "JetBrains Mono", "SF Mono", ui-monospace, monospace; font-s
       <span class="crumb"><a href="/en/">Eric Yen</a><span class="sep">/</span><a href="/en/products/">Products</a><span class="sep">/</span><span aria-current="page">Ghost Job Detector</span></span>
       <nav class="hero-links"><a href="https://github.com/fansia/104-ghost-job-detector" aria-label="GitHub" title="GitHub"><svg class="ico"><use href="#i-github"/></svg></a><span class="lang-switch"><a href="../" hreflang="zh-Hant" lang="zh-Hant">中文</a><span aria-current="true" lang="en">EN</span></span><button class="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button></nav>
     </div>
+    <div class="paused" role="note" id="paused">
+      <p class="paused-title">⏸ Development paused from October 2026.</p>
+      <p>104's member terms (revised September 2026) restrict the use of unofficial automation tools, and restrict using the platform's content to build derivative services. So that no one's 104 account gets into trouble because of this extension, I've decided to pause development and stop offering downloads.</p>
+      <p><b>If you have it installed, I recommend removing it.</b> Open <code>chrome://extensions/</code>, find <span lang="zh-Hant">"幽靈職缺偵測器"</span> (Ghost Job Detector) and click "Remove".</p>
+      <p>The source code stays on <a href="https://github.com/fansia/104-ghost-job-detector">GitHub</a> under the MIT license. Thank you to everyone who used it and reported problems.</p>
+    </div>
     <div class="product-title"><img src="../icon256.png" alt="" width="76" height="76"><h1 class="product">Ghost Job Detector</h1></div>
     <p class="tagline product">No reply to your application doesn't mean you weren't good enough. Maybe nobody was reading.</p>
     <p class="hero-sub">A Chrome extension for 104, Taiwan's largest job board. On every listing, it prints the half of the data 104 has but never shows.</p>
-    <div class="hero-tokens"><span>Free</span><span>Open source</span><span>Collects no data</span><span>v1.8.0</span></div>
+    <div class="hero-tokens"><span>Free</span><span>Open source</span><span>Collects no data</span><span>Development paused</span><span>Last version v1.8.0</span></div>
     <div class="hero-cta">
-      <a class="btn-primary" href="https://github.com/fansia/104-ghost-job-detector/releases/latest">Download the latest</a>
-      <a class="btn-ghost" href="#install">How to install</a>
+      <a class="btn-primary" href="#remove">How to remove it</a>
+      <a class="btn-ghost" href="changelog.html">Changelog</a>
     </div>
     <p class="disclaimer">Built independently. Not an official 104 product.</p>
   </header>
+
+  <p class="section-lede" style="margin:0 0 18px"><b>Below is the page as it was before development paused (last version v1.8.0), kept for the record.</b> The extension is no longer available for download; what follows describes how it behaved then.</p>
 
   <figure class="gallery">
     <div class="shot"><img src="../screenshot.png" alt="Two job cards on 104's search results, each with an extra row: résumés processed, replies to applicants, applicant count, posting date, open roles at the company" width="2260" height="1042"></div>
@@ -222,54 +172,20 @@ code { font-family: "JetBrains Mono", "SF Mono", ui-monospace, monospace; font-s
     <p class="manifesto-src" style="margin-top:18px">Thresholds set by gut feeling can't get this right, so it now shows only the data and leaves the judgement to you. <a href="https://github.com/fansia/104-ghost-job-detector#為什麼不評分" lang="zh-Hant">完整分析 →</a></p>
   </section>
 
-  <section id="install">
-    <p class="section-num">04 · Install</p>
-    <h2 class="section-title">Manual install, five steps</h2>
-    <div class="note"><b>Not on the Chrome Web Store for now.</b> 104 keeps changing its internal API format, and every store update needs a new review that usually takes weeks. Rather than leave an outdated, possibly broken version in the store, it's manual install only: the code is public and can be updated any time.</div>
+  <section id="remove">
+    <p class="section-num">04 · How to remove it</p>
+    <h2 class="section-title">If you have it installed, remove it</h2>
     <ol class="install">
-      <li><h3>Download and unzip</h3><p>From the <a href="https://github.com/fansia/104-ghost-job-detector/releases/latest">latest release</a>, download <code>ghost-job-detector-x.y.z.zip</code> and unzip it into a folder <b>you won't delete</b>. Chrome reads from that folder every time it starts; move or delete it and the extension stops working.</p></li>
-      <li><h3>Open the extensions page</h3><p>Type <code>chrome://extensions/</code> into Chrome's address bar and press Enter.</p></li>
-      <li><h3>Turn on "Developer mode" (top right)</h3><p><b>Keep it on after installing.</b> Turn it off and Chrome disables the extension too. This is the most common reason for "installed but nothing happens".</p><img src="../install-1-devmode.png" alt="The Developer mode switch at the top right of the extensions page" loading="lazy"></li>
-      <li><h3>Click "Load unpacked" and pick the folder from step 1</h3><p>The button only appears once Developer mode is on. Pick the folder that contains <code>manifest.json</code>, not its parent.</p><img src="../install-2-load-unpacked.png" alt="The Load unpacked button" loading="lazy"><img class="narrow" src="../install-3-installed.png" alt="The extension card in the list after installing" loading="lazy"></li>
-      <li><h3>Search any job on 104</h3><p>Search on <a href="https://www.104.com.tw/jobs/search/" lang="zh-Hant">104 找工作</a> and every job card gets an extra row of data. Reload any 104 tab that was open before you installed.</p></li>
+      <li><h3>Open the extensions page</h3><p>Type <code>chrome://extensions/</code> into Chrome's address bar and press Enter. In Edge, Brave and others, use their own extensions page (for example <code>edge://extensions/</code>).</p></li>
+      <li><h3>Find <span lang="zh-Hant">"幽靈職缺偵測器"</span> and click "Remove"</h3><p>Chrome asks once more; confirm. The data the extension kept on your computer (cache, listing history, hide rules) is deleted with it; nothing else to clean up.</p><img class="narrow" src="../install-3-installed.png" alt="The extension card on the extensions page, with the Remove button at the bottom left" loading="lazy"></li>
+      <li><h3>(Optional) Delete the unzipped folder</h3><p>The folder you unzipped when installing it manually isn't needed once the extension is removed; you can delete it.</p></li>
     </ol>
-    <p class="section-lede" style="margin:8px 0 10px"><b>When there's a new version:</b> download the new zip and unzip it over the same folder (don't move it), click reload on the extension card in <code>chrome://extensions/</code>, then reload your 104 tabs.</p>
-    <img class="narrow" src="../install-4-reload.png" alt="The reload icon on the extension card" loading="lazy" style="display:block;max-width:424px;width:100%;border:1px solid var(--border);border-radius:6px">
   </section>
 
-  <section id="env">
-    <p class="section-num">05 · Where it runs</p>
-    <h2 class="section-title">It depends on the browser, not the OS</h2>
-    <table class="table">
-      <thead><tr><th>Environment</th><th>Supported</th><th>Notes</th></tr></thead>
-      <tbody>
-        <tr><td>Chrome (desktop)</td><td>✅</td><td>macOS, Windows and Linux</td></tr>
-        <tr><td>Edge, Brave, Vivaldi</td><td>✅</td><td>Also Chromium; same install steps</td></tr>
-        <tr><td>Firefox, Safari</td><td>❌</td><td>Different extension format; no version yet</td></tr>
-        <tr><td>Phones / tablets</td><td>❌</td><td>Chrome on Android and iOS doesn't support extensions</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section id="faq" class="faq">
-    <p class="section-num">06 · Installed but nothing happens?</p>
-    <h2 class="section-title">Check in this order</h2>
-    <details><summary>Developer mode got turned off</summary><p>The most common cause. Manually installed extensions only run with it on. Check the switch at the top right of <code>chrome://extensions/</code>.</p></details>
-    <details><summary>The 104 tab wasn't reloaded after installing</summary><p>The extension only loads when a page loads; reload tabs that were already open.</p></details>
-    <details><summary>The page isn't supported</summary><p>It works on 104's search results, AI recommendations, job pages and company pages. Other pages (home, résumé management) get no badge.</p></details>
-    <details><summary>The extension is switched off</summary><p>Click its icon in the toolbar and make sure detection is on.</p></details>
-    <details><summary>Chrome asks to "Disable developer mode extensions" on start</summary><p>Click "Keep", not disable.</p></details>
-    <details><summary>The badge says data is unavailable or the format may have changed</summary><p>104 has probably changed something. The popup shows how many times in a row it failed; please report it on <a href="https://github.com/fansia/104-ghost-job-detector/issues">GitHub Issues</a>.</p></details>
-  </section>
-
-  <section id="support">
-    <p class="section-num">07 · If it helped</p>
-    <p class="manifesto">This extension is free and will stay free: no paid tier, no ads, no data collected. If it saved you from a few listings that never reply, you can buy me a coffee.</p>
-    <p class="manifesto-src">No pressure at all. Reporting problems or sharing it with a friend who's job hunting helps the project even more.</p>
-    <div class="support">
-      <a class="btn-primary" href="https://buymeacoffee.com/ericyen">☕ Buy me a coffee</a>
-      <a class="btn-ghost" href="https://github.com/fansia/104-ghost-job-detector/issues">Report a problem</a>
-    </div>
+  <section id="thanks">
+    <p class="section-num">05 · Thank you</p>
+    <p class="manifesto">Thank you to everyone who used it and reported problems.</p>
+    <p class="manifesto-src">The source code stays on <a href="https://github.com/fansia/104-ghost-job-detector">GitHub</a> under the MIT license; the full "why no scores" analysis and implementation notes are in the README (in Chinese).</p>
   </section>
 
   <section id="maker">
